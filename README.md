@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Helix Cross-Chain (Ethereum <-> Cosmos)
 
 ## Project info
 
