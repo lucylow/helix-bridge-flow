@@ -6,6 +6,7 @@ import { Zap, FileText, BarChart3, Dna } from "lucide-react";
 import WalletStatus from "@/components/WalletStatus";
 import SwapTracker from "@/components/SwapTracker";
 import SwapForm from "@/components/SwapForm";
+import SwapHistory from "@/components/SwapHistory";
 import TechnicalDetails from "@/components/TechnicalDetails";
 import JudgingHelper from "@/components/JudgingHelper";
 import ErrorCenter from "@/components/ErrorCenter";
@@ -113,14 +114,7 @@ const Index = () => {
     }
 
     if (activeTab === "history") {
-      return (
-        <div className="text-center py-16">
-          <Zap className="w-16 h-16 mx-auto mb-4 text-orange-500" />
-          <h2 className="text-xl font-semibold mb-2">No atomic swaps yet</h2>
-          <p className="text-muted-foreground mb-6">Create your first atomic swap to see it here</p>
-          <Button onClick={() => setActiveTab("create")}>Create Swap</Button>
-        </div>
-      );
+      return <SwapHistory />;
     }
 
     // Status tab

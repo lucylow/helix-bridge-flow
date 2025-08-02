@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Clock, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle, Clock, Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type SwapStep = "initiated" | "eth-locked" | "atom-locked" | "completed";
 
@@ -26,6 +27,8 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
   const [currentStep, setCurrentStep] = useState<SwapStep>("initiated");
   const [progress, setProgress] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [swapCompleted, setSwapCompleted] = useState(false);
+  const [completionProof, setCompletionProof] = useState<any>(null);
 
   const steps = [
     { key: "initiated", label: "Swap Initiated", icon: Loader2, color: "text-yellow-500" },
@@ -33,6 +36,45 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
     { key: "atom-locked", label: "ATOM Locked", icon: Clock, color: "text-purple-500" },
     { key: "completed", label: "Completed", icon: CheckCircle, color: "text-green-500" }
   ];
+
+  const saveCompletedSwap = async (swapData: SwapData) => {
+    try {
+      const mockProof = {
+        eth_tx_hash: "0xabc123def456789012345678901234567890abcdef123456789012345678901234",
+        cosmos_tx_hash: "cosmos1x3z4y5w6v7u8t9s0r1q2p3o4n5m6l7k8j9i0h1234567890",
+        completion_timestamp: new Date().toISOString(),
+        gas_used: "0.0021 ETH",
+        confirmations: 12
+      };
+
+      const { data, error } = await supabase
+        .from('atomic_swaps')
+        .insert({
+          from_token: swapData.fromToken,
+          to_token: swapData.toToken,
+          amount: parseFloat(swapData.amount),
+          recipient_address: "cosmos1x3z4y5w6v7u8t9s0r1q2p3o4n5m6l7k8j9i0h1",
+          timelock_duration: swapData.timelock,
+          hashlock: swapData.hashlock,
+          status: 'completed',
+          progress: 100,
+          eth_tx_hash: mockProof.eth_tx_hash,
+          cosmos_tx_hash: mockProof.cosmos_tx_hash,
+          completion_proof: mockProof,
+          completed_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Failed to save swap:', error);
+      } else {
+        setCompletionProof(mockProof);
+        setSwapCompleted(true);
+        console.log('Swap saved successfully:', data);
+      }
+    } catch (error) {
+      console.error('Error saving swap:', error);
+    }
+  };
 
   const fetchQuote = async () => {
     try {
@@ -84,6 +126,9 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
               setProgress(100);
               setShowConfetti(true);
               setTimeout(() => setShowConfetti(false), 3000);
+              
+              // Save the completed swap to database
+              saveCompletedSwap(activeSwap);
             }, 3000); // 3 seconds for atom lock
           }, 4000); // 4 seconds for eth lock
         }, 2000); // 2 seconds initial delay
@@ -213,9 +258,22 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
                         </Badge>
                       </div>
                       
-                      {status === "active" && (
+                      {status === "active" && step.key !== "completed" && (
                         <p className="text-xs text-muted-foreground mt-1">
                           Processing...
+                        </p>
+                      )}
+                      
+                      {status === "active" && step.key === "completed" && !swapCompleted && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Finalizing...
+                        </p>
+                      )}
+                      
+                      {status === "completed" && step.key === "completed" && swapCompleted && (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          Swap completed successfully
+                          <ExternalLink className="w-3 h-3" />
                         </p>
                       )}
                       
@@ -232,6 +290,45 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
           );
         })}
       </div>
+
+      {/* Completion Proof */}
+      {swapCompleted && completionProof && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-semibold text-green-800">Swap Completed Successfully</span>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ETH Transaction:</span>
+                  <span className="font-mono text-xs text-blue-600 flex items-center gap-1">
+                    {completionProof.eth_tx_hash.slice(0, 10)}...
+                    <ExternalLink className="w-3 h-3" />
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Cosmos Transaction:</span>
+                  <span className="font-mono text-xs text-purple-600 flex items-center gap-1">
+                    {completionProof.cosmos_tx_hash.slice(0, 15)}...
+                    <ExternalLink className="w-3 h-3" />
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Gas Used:</span>
+                  <span className="font-medium text-green-600">{completionProof.gas_used}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Confirmations:</span>
+                  <span className="font-medium">{completionProof.confirmations}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Swap Details */}
       <Card>
