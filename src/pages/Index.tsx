@@ -14,8 +14,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("create");
   const [judgingHelperVisible, setJudgingHelperVisible] = useState(false);
   const [walletsConnected, setWalletsConnected] = useState({ ethereum: false, cosmos: false });
-  const [hasError, setHasError] = useState(true);
-  const [techDetailsExpanded, setTechDetailsExpanded] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [activeSwap, setActiveSwap] = useState(null);
 
   // Keyboard shortcut for judging helper
@@ -84,12 +83,6 @@ const Index = () => {
           <div className="space-y-6">
             <WalletStatus onWalletConnect={handleWalletConnect} />
             
-            {/* Error Recovery Center */}
-            <ErrorCenter 
-              hasError={hasError} 
-              errorType="api" 
-              onErrorResolved={() => setHasError(false)}
-            />
           </div>
 
           {/* Center Column: Swap Form and Tracker */}
@@ -100,10 +93,7 @@ const Index = () => {
 
           {/* Right Column: Technical Details */}
           <div className="space-y-6">
-            <TechnicalDetails 
-              isExpanded={techDetailsExpanded}
-              onToggle={() => setTechDetailsExpanded(!techDetailsExpanded)}
-            />
+            <TechnicalDetails isExpanded={true} />
             
             {/* Judging Helper Access Hint */}
             <Card className="border-dashed border-gray-300">
@@ -169,27 +159,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
-                1
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">1inch Fusion+ <span className="text-blue-600">Cosmos</span></h1>
-                <p className="text-sm text-muted-foreground">Cross-chain atomic swaps</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">API: h6VoEtvR...paXr</span>
-              <Badge variant="destructive">Error</Badge>
-              <Button>Connect Wallets</Button>
-            </div>
-          </div>
-        </div>
-      </div>
 
         {/* Main Content */}
         <div className="container mx-auto px-4 py-8">

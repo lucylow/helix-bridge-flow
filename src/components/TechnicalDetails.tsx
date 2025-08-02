@@ -10,15 +10,9 @@ interface TechnicalDetailsProps {
   onToggle?: () => void;
 }
 
-const TechnicalDetails = ({ isExpanded = false, onToggle }: TechnicalDetailsProps) => {
-  const [expanded, setExpanded] = useState(isExpanded);
+const TechnicalDetails = ({ isExpanded = true }: TechnicalDetailsProps) => {
+  const [expanded] = useState(isExpanded);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
-
-  const handleToggle = () => {
-    const newState = !expanded;
-    setExpanded(newState);
-    onToggle?.();
-  };
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -55,17 +49,8 @@ const TechnicalDetails = ({ isExpanded = false, onToggle }: TechnicalDetailsProp
 
   return (
     <div className="space-y-4">
-      <Button
-        variant="ghost"
-        onClick={handleToggle}
-        className="w-full justify-between p-3 h-auto"
-      >
-        <span className="font-medium">Show tech details</span>
-        {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-      </Button>
-
-      {expanded && (
-        <div className="space-y-4 animate-fade-in">
+      <h3 className="font-medium text-lg mb-4">Technical Details</h3>
+      <div className="space-y-4 animate-fade-in">
           {/* Hashlock Verification */}
           <Card>
             <CardContent className="p-4">
@@ -95,12 +80,12 @@ const TechnicalDetails = ({ isExpanded = false, onToggle }: TechnicalDetailsProp
                     >
                       <Copy className="w-3 h-3" />
                     </Button>
-                    {copiedItem === "hashlock" && (
-                      <span className="text-xs text-green-600 animate-fade-in">Copied!</span>
-                    )}
-                  </div>
-                </div>
-              </div>
+                     {copiedItem === "hashlock" && (
+                       <span className="text-xs text-green-600 animate-fade-in">Copied!</span>
+                     )}
+                   </div>
+                 </div>
+               </div>
             </CardContent>
           </Card>
 
@@ -216,7 +201,6 @@ const TechnicalDetails = ({ isExpanded = false, onToggle }: TechnicalDetailsProp
             </CardContent>
           </Card>
         </div>
-      )}
     </div>
   );
 };
