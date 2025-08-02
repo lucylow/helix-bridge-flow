@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, FileText, BarChart3, Dna } from "lucide-react";
 import WalletStatus from "@/components/WalletStatus";
 import SwapTracker from "@/components/SwapTracker";
+import SwapForm from "@/components/SwapForm";
 import TechnicalDetails from "@/components/TechnicalDetails";
 import JudgingHelper from "@/components/JudgingHelper";
 import ErrorCenter from "@/components/ErrorCenter";
@@ -15,6 +16,7 @@ const Index = () => {
   const [walletsConnected, setWalletsConnected] = useState({ ethereum: false, cosmos: false });
   const [hasError, setHasError] = useState(true);
   const [techDetailsExpanded, setTechDetailsExpanded] = useState(false);
+  const [activeSwap, setActiveSwap] = useState(null);
 
   // Keyboard shortcut for judging helper
   useEffect(() => {
@@ -31,6 +33,20 @@ const Index = () => {
 
   const handleWalletConnect = (chain: "ethereum" | "cosmos") => {
     setWalletsConnected(prev => ({ ...prev, [chain]: true }));
+  };
+
+  const handleCreateSwap = (swapData: any) => {
+    console.log("Creating swap:", swapData);
+    setActiveSwap({
+      id: `swap_${Date.now()}`,
+      fromToken: swapData.fromToken,
+      toToken: swapData.toToken,
+      amount: swapData.amount,
+      currentStep: "initiated",
+      progress: 10,
+      timelock: swapData.timelockDuration,
+      hashlock: "0xa1b2c3d4e5f6..."
+    });
   };
 
   const networkStatus = [
@@ -76,9 +92,10 @@ const Index = () => {
             />
           </div>
 
-          {/* Center Column: Animated Swap Tracker */}
-          <div>
-            <SwapTracker />
+          {/* Center Column: Swap Form and Tracker */}
+          <div className="space-y-6">
+            <SwapForm onCreateSwap={handleCreateSwap} />
+            {activeSwap && <SwapTracker activeSwap={activeSwap} />}
           </div>
 
           {/* Right Column: Technical Details */}

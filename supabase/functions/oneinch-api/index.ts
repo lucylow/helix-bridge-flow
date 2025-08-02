@@ -24,6 +24,8 @@ serve(async (req) => {
     if (!apiKey) {
       throw new Error('1inch API key not configured')
     }
+    
+    console.log('Using API key:', `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`)
 
     let url: string
     let params: URLSearchParams
