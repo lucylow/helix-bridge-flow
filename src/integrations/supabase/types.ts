@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      atomic_swaps: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          completion_proof: Json | null
+          cosmos_tx_hash: string | null
+          created_at: string
+          eth_tx_hash: string | null
+          from_token: string
+          hashlock: string
+          id: string
+          progress: number
+          recipient_address: string
+          status: string
+          timelock_duration: number
+          to_token: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          completion_proof?: Json | null
+          cosmos_tx_hash?: string | null
+          created_at?: string
+          eth_tx_hash?: string | null
+          from_token: string
+          hashlock: string
+          id?: string
+          progress?: number
+          recipient_address: string
+          status?: string
+          timelock_duration: number
+          to_token: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          completion_proof?: Json | null
+          cosmos_tx_hash?: string | null
+          created_at?: string
+          eth_tx_hash?: string | null
+          from_token?: string
+          hashlock?: string
+          id?: string
+          progress?: number
+          recipient_address?: string
+          status?: string
+          timelock_duration?: number
+          to_token?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
