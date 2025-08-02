@@ -2,15 +2,18 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Wallet, CheckCircle, Loader2, AlertCircle, Globe, TestTube, Play } from "lucide-react";
 
 type WalletState = "disconnected" | "connecting" | "connected" | "error";
+type NetworkMode = "mainnet" | "testnet" | "demo";
 
 interface WalletStatusProps {
   onWalletConnect: (chain: "ethereum" | "cosmos") => void;
 }
 
 const WalletStatus = ({ onWalletConnect }: WalletStatusProps) => {
+  const [networkMode, setNetworkMode] = useState<NetworkMode>("demo");
   const [ethState, setEthState] = useState<WalletState>("disconnected");
   const [cosmosState, setCosmosState] = useState<WalletState>("disconnected");
   const [ethAddress, setEthAddress] = useState("");
@@ -42,26 +45,87 @@ const WalletStatus = ({ onWalletConnect }: WalletStatusProps) => {
     }
   };
 
+  const getNetworkBadge = (chain: "ethereum" | "cosmos") => {
+    if (networkMode === "demo") {
+      return <Badge variant="outline" className="text-xs">Demo</Badge>;
+    }
+    
+    if (chain === "ethereum") {
+      return networkMode === "mainnet" 
+        ? <Badge variant="outline" className="text-xs">Mainnet</Badge>
+        : <Badge variant="outline" className="text-xs">Sepolia</Badge>;
+    } else {
+      return networkMode === "mainnet"
+        ? <Badge variant="outline" className="text-xs">Hub</Badge>
+        : <Badge variant="outline" className="text-xs">Theta</Badge>;
+    }
+  };
+
   const handleConnect = async (chain: "ethereum" | "cosmos") => {
-    const setState = chain === "ethereum" ? setEthState : setCosmosState;
-    const setAddress = chain === "ethereum" ? setEthAddress : setCosmosAddress;
-    
-    setState("connecting");
-    
-    // Simulate connection process
-    setTimeout(() => {
-      const mockAddress = chain === "ethereum" 
-        ? "0x23A4B...c9ae" 
-        : "cosmos1x3z...k8m9";
-      setAddress(mockAddress);
-      setState("connected");
-      onWalletConnect(chain);
-    }, 2000);
+    if (networkMode === "demo") {
+      // Demo mode - simulate connection
+      const setState = chain === "ethereum" ? setEthState : setCosmosState;
+      const setAddress = chain === "ethereum" ? setEthAddress : setCosmosAddress;
+      
+      setState("connecting");
+      
+      setTimeout(() => {
+        const mockAddress = chain === "ethereum" 
+          ? "0x23A4B...c9ae" 
+          : "cosmos1x3z...k8m9";
+        setAddress(mockAddress);
+        setState("connected");
+        onWalletConnect(chain);
+      }, 2000);
+    } else {
+      // Real wallet connection would go here
+      // For now, show error to indicate real wallet integration needed
+      const setState = chain === "ethereum" ? setEthState : setCosmosState;
+      setState("error");
+    }
   };
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold mb-4">Wallet Status</h3>
+      
+      {/* Network Mode Selection */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Globe className="w-4 h-4" />
+              <span className="text-sm font-medium">Network Mode</span>
+            </div>
+            <Tabs value={networkMode} onValueChange={(value) => setNetworkMode(value as NetworkMode)}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="mainnet" className="flex items-center gap-1">
+                  <Globe className="w-3 h-3" />
+                  Mainnet
+                </TabsTrigger>
+                <TabsTrigger value="testnet" className="flex items-center gap-1">
+                  <TestTube className="w-3 h-3" />
+                  Testnet
+                </TabsTrigger>
+                <TabsTrigger value="demo" className="flex items-center gap-1">
+                  <Play className="w-3 h-3" />
+                  Demo
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {networkMode === "demo" && (
+              <p className="text-xs text-muted-foreground">
+                Demo mode uses simulated wallets for testing
+              </p>
+            )}
+            {networkMode !== "demo" && (
+              <p className="text-xs text-muted-foreground">
+                Connect your real {networkMode} wallets
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Ethereum Wallet */}
       <Card className="transition-all duration-300 hover:shadow-md">
@@ -74,7 +138,7 @@ const WalletStatus = ({ onWalletConnect }: WalletStatusProps) => {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Ethereum</span>
-                  <Badge variant="outline" className="text-xs">Sepolia</Badge>
+                  {getNetworkBadge("ethereum")}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   {getStateIcon(ethState)}
@@ -108,7 +172,7 @@ const WalletStatus = ({ onWalletConnect }: WalletStatusProps) => {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Cosmos</span>
-                  <Badge variant="outline" className="text-xs">Theta</Badge>
+                  {getNetworkBadge("cosmos")}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   {getStateIcon(cosmosState)}
