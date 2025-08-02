@@ -67,8 +67,31 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
     if (activeSwap) {
       setCurrentStep(activeSwap.currentStep);
       setProgress(activeSwap.progress);
+      
+      // Start automatic progression if it's a new swap (initiated state)
+      if (activeSwap.currentStep === "initiated" && activeSwap.progress === 10) {
+        // Simulate the atomic swap process
+        setTimeout(() => {
+          setCurrentStep('eth-locked');
+          setProgress(25);
+          
+          setTimeout(() => {
+            setCurrentStep('atom-locked');
+            setProgress(75);
+            
+            setTimeout(() => {
+              setCurrentStep('completed');
+              setProgress(100);
+              setShowConfetti(true);
+              setTimeout(() => setShowConfetti(false), 3000);
+            }, 3000); // 3 seconds for atom lock
+          }, 4000); // 4 seconds for eth lock
+        }, 2000); // 2 seconds initial delay
+      }
     } else {
-      // Auto-start demo
+      // Auto-start demo when no active swap
+      setCurrentStep("initiated");
+      setProgress(10);
       fetchQuote();
     }
   }, [activeSwap]);
