@@ -210,14 +210,6 @@ The application is deployed and accessible at: [Coming Soon]
 - **Ethereum (Sepolia)**: `0x...` [To be deployed]
 - **Cosmos (Theta)**: `cosmos1...` [To be deployed]
 
-## 🤝 Contributing
-
-This project was built for the EthGlobal Unite DeFi hackathon. For questions or collaboration:
-
-- **Team**: Manus AI
-- **Contact**: [Your contact information]
-- **GitHub**: [Repository link]
-
 ## 📄 License
 
 MIT License - see LICENSE file for details.
@@ -229,7 +221,5 @@ MIT License - see LICENSE file for details.
 - **Ethereum & Cosmos**: For the incredible blockchain ecosystems
 - **Open Source Community**: For the tools and libraries used
 
----
 
-**Built with ❤️ for EthGlobal Unite DeFi 2025**
 
