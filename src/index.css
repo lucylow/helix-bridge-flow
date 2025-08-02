@@ -53,6 +53,21 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Helix DNA Theme */
+    --helix-primary: 217 91% 60%;
+    --helix-secondary: 271 76% 53%;
+    --helix-accent: 142 76% 36%;
+    --helix-glow: 217 91% 80%;
+    
+    /* Gradients */
+    --gradient-helix: linear-gradient(135deg, hsl(var(--helix-primary)), hsl(var(--helix-secondary)));
+    --gradient-dna: linear-gradient(45deg, hsl(var(--helix-primary)), hsl(var(--helix-accent)));
+    
+    /* Animations */
+    --transition-helix: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-helix: 0 10px 30px -10px hsl(var(--helix-primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--helix-glow) / 0.4);
   }
 
   .dark {
@@ -91,6 +106,12 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Dark theme helix colors */
+    --helix-primary: 217 91% 70%;
+    --helix-secondary: 271 76% 63%;
+    --helix-accent: 142 76% 46%;
+    --helix-glow: 217 91% 90%;
   }
 }
 
@@ -102,4 +123,53 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Helix DNA Animations */
+@keyframes helix-spin {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1.05);
+  }
+}
+
+@keyframes dna-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-helix-spin {
+  animation: helix-spin 3s linear infinite;
+}
+
+.animate-dna-pulse {
+  animation: dna-pulse 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Keyboard shortcut styling */
+kbd {
+  @apply px-1.5 py-0.5 text-xs font-semibold bg-muted border border-border rounded;
 }
