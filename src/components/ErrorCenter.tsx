@@ -70,10 +70,22 @@ const ErrorCenter = ({ hasError = true, errorType = "api", onErrorResolved }: Er
     setDiagnosing(true);
     setExpanded(true);
     
-    // Simulate diagnosis
-    setTimeout(() => {
+    try {
+      const response = await fetch(`https://jzgfrpdqvxxbruvfyeih.supabase.co/functions/v1/oneinch-api?endpoint=tokens&chainId=1`, {
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6Z2ZycGRxdnh4YnJ1dmZ5ZWloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNTI4MTYsImV4cCI6MjA2OTcyODgxNn0.SMcM_rnuTCSB9a98ORYaPSOMMcQMw7LLJOskyXP9ICg`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('1inch API test successful:', data);
+      }
+    } catch (error) {
+      console.error('1inch API test failed:', error);
+    } finally {
       setDiagnosing(false);
-    }, 2000);
+    }
   };
 
   const startFix = async () => {

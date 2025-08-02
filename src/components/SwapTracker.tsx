@@ -34,10 +34,42 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
     { key: "completed", label: "Completed", icon: CheckCircle, color: "text-green-500" }
   ];
 
+  const fetchQuote = async () => {
+    try {
+      const response = await fetch(`https://jzgfrpdqvxxbruvfyeih.supabase.co/functions/v1/oneinch-api?endpoint=quote&chainId=1&src=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&dst=0xA0b86a33E6441b8e5e8e8e8e8e8e8e8e8e8e8e8e&amount=1000000000000000000`, {
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6Z2ZycGRxdnh4YnJ1dmZ5ZWloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNTI4MTYsImV4cCI6MjA2OTcyODgxNn0.SMcM_rnuTCSB9a98ORYaPSOMMcQMw7LLJOskyXP9ICg`
+        }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setCurrentStep('eth-locked');
+        setProgress(25);
+        
+        setTimeout(() => {
+          setCurrentStep('atom-locked');
+          setProgress(75);
+          setTimeout(() => {
+            setCurrentStep('completed');
+            setProgress(100);
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 3000);
+          }, 2000);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Quote fetch failed:', error);
+    }
+  };
+
   useEffect(() => {
     if (activeSwap) {
       setCurrentStep(activeSwap.currentStep);
       setProgress(activeSwap.progress);
+    } else {
+      // Auto-start demo
+      fetchQuote();
     }
   }, [activeSwap]);
 
