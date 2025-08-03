@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowDownUp, Zap, Clock } from "lucide-react";
+import { ArrowDownUp, Zap, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ethers } from "ethers";
+// import { validateEthereumAddress, validateCosmosAddress } from "@/utils/addressValidation";
+// import { ENSService } from "@/services/ensService";
 import "../types/wallet";
 
 interface SwapFormProps {
@@ -19,6 +21,12 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
   const [amount, setAmount] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
   const [timelockDuration, setTimelockDuration] = useState("3600");
+  const [addressValidation, setAddressValidation] = useState({
+    isValid: false,
+    error: null as string | null,
+    type: null as string | null,
+    normalized: null as string | null
+  });
 
   const tokens = [
     { symbol: "ETH", name: "Ethereum", chain: "Ethereum" },
@@ -44,40 +52,118 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
 
   const [isCreating, setIsCreating] = useState(false);
 
+  // DEMO MODE: Check if we're in demo mode
+  const isDemoMode = window.location.search.includes('demo') || window.location.pathname.includes('demo');
+
+  // DEMO MODE: Auto-fill hardcoded addresses
+  useEffect(() => {
+    if (isDemoMode) {
+      if (getTokenChain(toToken) === "Ethereum") {
+        setRecipientAddress("0x758282EFA1887244c7dBe5b7d585887CF345e8a4");
+      } else if (getTokenChain(toToken) === "Cosmos") {
+        setRecipientAddress("cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m");
+      }
+    }
+  }, [toToken, isDemoMode]);
+
+  // Validate recipient address in real-time (skip validation in demo mode)
+  useEffect(() => {
+    if (isDemoMode) {
+      // In demo mode, always show as valid
+      setAddressValidation({
+        isValid: true,
+        error: null,
+        type: 'address',
+        normalized: recipientAddress || 'demo-address'
+      });
+      return;
+    }
+    
+    if (recipientAddress.trim()) {
+      const targetChain = getTokenChain(toToken);
+      
+      // Simple validation for demo
+      if (targetChain === "Ethereum") {
+        if (recipientAddress.startsWith('0x') && recipientAddress.length === 42) {
+          setAddressValidation({
+            isValid: true,
+            error: null,
+            type: 'address',
+            normalized: recipientAddress
+          });
+        } else {
+          setAddressValidation({
+            isValid: false,
+            error: "Please enter a valid Ethereum address",
+            type: null,
+            normalized: null
+          });
+        }
+      } else if (targetChain === "Cosmos") {
+        if (recipientAddress.startsWith('cosmos1') && recipientAddress.length >= 39) {
+          setAddressValidation({
+            isValid: true,
+            error: null,
+            type: 'address',
+            normalized: recipientAddress
+          });
+        } else {
+          setAddressValidation({
+            isValid: false,
+            error: "Please enter a valid Cosmos address",
+            type: null,
+            normalized: null
+          });
+        }
+      }
+    } else {
+      setAddressValidation({ isValid: false, error: null, type: null, normalized: null });
+    }
+  }, [recipientAddress, toToken, isDemoMode]);
+
   const handleCreateSwap = async () => {
     if (!amount || !recipientAddress) {
       alert("Please fill in all required fields");
       return;
     }
 
-    // Clean and validate recipient address
-    const cleanedRecipientAddress = recipientAddress.trim();
+    // DEMO MODE: Hardcode working addresses
+    let finalRecipientAddress = recipientAddress;
     
-    // Validate address format
-    if (getTokenChain(toToken) === "Ethereum") {
-      if (!ethers.isAddress(cleanedRecipientAddress)) {
-        alert("Please enter a valid Ethereum address (0x...)");
+    if (isDemoMode) {
+      // Force hardcoded demo addresses that we know work
+      if (getTokenChain(toToken) === "Ethereum") {
+        finalRecipientAddress = "0x758282EFA1887244c7dBe5b7d585887CF345e8a4";
+        console.log("DEMO MODE: Using hardcoded Ethereum address");
+      } else if (getTokenChain(toToken) === "Cosmos") {
+        finalRecipientAddress = "cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m";
+        console.log("DEMO MODE: Using hardcoded Cosmos address");
+      }
+    } else {
+      // Production mode: Use validation
+      if (!addressValidation.isValid) {
+        alert(addressValidation.error || "Please enter a valid recipient address");
         return;
       }
-    } else if (getTokenChain(toToken) === "Cosmos") {
-      if (!cleanedRecipientAddress.startsWith('cosmos1') || cleanedRecipientAddress.length < 39) {
-        alert("Please enter a valid Cosmos address (cosmos1...)");
-        return;
-      }
+
+      // For production mode, just use the validated address
+      finalRecipientAddress = addressValidation.normalized!;
     }
 
     setIsCreating(true);
     
     try {
-      // Create atomic swap request
+      // Create atomic swap request with final address
       const swapData: any = {
         fromToken,
         toToken,
         amount,
-        recipientAddress: cleanedRecipientAddress,
+        recipientAddress: finalRecipientAddress, // Use final resolved/hardcoded address
+        originalRecipient: recipientAddress, // Keep original for display
         timelockDuration: parseInt(timelockDuration),
         timestamp: Date.now(),
-        direction: getTokenChain(fromToken) === "Ethereum" ? "eth-to-cosmos" : "cosmos-to-eth"
+        direction: getTokenChain(fromToken) === "Ethereum" ? "eth-to-cosmos" : "cosmos-to-eth",
+        isDemoMode
       };
 
       // For real implementation, call backend API
@@ -91,7 +177,7 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         
         console.log("Creating real Ethereum HTLC...");
         const tx = await atomicSwapEngine.createEthereumSwap(
-          cleanedRecipientAddress,
+          finalRecipientAddress,
           amount,
           hashlock,
           parseInt(timelockDuration)
@@ -127,10 +213,13 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           <Zap className="w-5 h-5 text-blue-600" />
-          Create Atomic Swap
+          Create Atomic Swap {isDemoMode && <Badge variant="secondary">DEMO</Badge>}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Create a trustless cross-chain swap with hashlock/timelock protection
+          {isDemoMode ? 
+            "Demo mode with hardcoded Sepolia ↔ Theta addresses" :
+            "Create a trustless cross-chain swap with hashlock/timelock protection"
+          }
         </p>
       </CardHeader>
       
@@ -218,14 +307,55 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         {/* Recipient Address */}
         <div className="space-y-2">
           <Label htmlFor="recipient">
-            Recipient Address ({getTokenChain(toToken)})
+            Recipient Address ({getTokenChain(toToken)}) {isDemoMode && <Badge variant="outline">Auto-filled</Badge>}
           </Label>
-          <Input
-            id="recipient"
-            placeholder={getTokenChain(toToken) === "Cosmos" ? "cosmos1..." : "0x..."}
-            value={recipientAddress}
-            onChange={(e) => setRecipientAddress(e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              id="recipient"
+              placeholder={getTokenChain(toToken) === "Cosmos" ? "cosmos1..." : "0x... or name.eth"}
+              value={recipientAddress}
+              onChange={(e) => setRecipientAddress(e.target.value)}
+              disabled={isDemoMode}
+              className={`pr-10 ${
+                recipientAddress && addressValidation.isValid 
+                  ? "border-green-500" 
+                  : recipientAddress && addressValidation.error 
+                  ? "border-red-500" 
+                  : ""
+              } ${isDemoMode ? "bg-muted" : ""}`}
+            />
+            {recipientAddress && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                {addressValidation.isValid ? (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                ) : addressValidation.error ? (
+                  <XCircle className="w-4 h-4 text-red-500" />
+                ) : null}
+              </div>
+            )}
+          </div>
+          
+          {/* Address Validation Feedback */}
+          {recipientAddress && (
+            <div className="text-xs">
+              {addressValidation.isValid ? (
+                <div className="text-green-600 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  {isDemoMode ? 'Demo address (hardcoded)' : `Valid ${addressValidation.type === 'ens' ? 'ENS name' : `${getTokenChain(toToken)} address`}`}
+                  {addressValidation.type === 'address' && addressValidation.normalized && !isDemoMode && (
+                    <div className="text-muted-foreground ml-2">
+                      {addressValidation.normalized.slice(0, 8)}...{addressValidation.normalized.slice(-6)}
+                    </div>
+                  )}
+                </div>
+              ) : addressValidation.error ? (
+                <div className="text-red-600 flex items-center gap-1">
+                  <XCircle className="w-3 h-3" />
+                  {addressValidation.error}
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {/* Timelock Duration */}
@@ -252,7 +382,7 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         <Button 
           onClick={handleCreateSwap} 
           className="w-full"
-          disabled={!amount || !recipientAddress || isCreating}
+          disabled={!amount || (!isDemoMode && !addressValidation.isValid) || isCreating}
         >
           {isCreating ? (
             <>
@@ -269,11 +399,22 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
 
         {/* Info */}
         <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          <p className="mb-1">ℹ️ This creates a secure cross-chain atomic swap:</p>
+          <p className="mb-1">ℹ️ {isDemoMode ? 'DEMO MODE: Using hardcoded testnet addresses' : 'This creates a secure cross-chain atomic swap:'}</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Funds are locked with hashlock/timelock</li>
-            <li>Either both parties get their tokens or both get refunds</li>
-            <li>No counterparty risk</li>
+            {isDemoMode ? (
+              <>
+                <li>ETH → ATOM: Sepolia to Theta testnet</li>
+                <li>ATOM → ETH: Theta to Sepolia testnet</li>
+                <li>Hardcoded addresses for reliable demo</li>
+                <li>Addresses auto-filled when you change tokens</li>
+              </>
+            ) : (
+              <>
+                <li>Funds are locked with hashlock/timelock</li>
+                <li>Either both parties get their tokens or both get refunds</li>
+                <li>No counterparty risk</li>
+              </>
+            )}
           </ul>
         </div>
       </CardContent>
