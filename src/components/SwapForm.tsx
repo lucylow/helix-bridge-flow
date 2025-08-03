@@ -404,7 +404,7 @@ ${isDemoMode ? 'Demo' : 'Testnet'} Transaction: ${fakeHash.slice(0, 10)}...`);
               {addressValidation.isValid ? (
                 <div className="text-green-600 flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" />
-                  {isDemoMode ? 'Demo address (hardcoded)' : `Valid ${addressValidation.type === 'ens' ? 'ENS name' : `${getTokenChain(toToken)} address`}`}
+                  {`Valid ${addressValidation.type === 'ens' ? 'ENS name' : `${getTokenChain(toToken)} address`}`}
                   {addressValidation.type === 'address' && addressValidation.normalized && !isDemoMode && (
                     <div className="text-muted-foreground ml-2">
                       {addressValidation.normalized.slice(0, 8)}...{addressValidation.normalized.slice(-6)}
@@ -462,23 +462,11 @@ ${isDemoMode ? 'Demo' : 'Testnet'} Transaction: ${fakeHash.slice(0, 10)}...`);
 
         {/* Info */}
         <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          <p className="mb-1">ℹ️ {isDemoMode ? '🚀 DEMO MODE: Simulated swaps - always succeed!' : 'This creates a secure cross-chain atomic swap:'}</p>
+          <p className="mb-1">ℹ️ This creates a secure cross-chain atomic swap:</p>
           <ul className="list-disc list-inside space-y-1">
-            {isDemoMode ? (
-              <>
-                <li>✅ Guaranteed success - no real funds needed</li>
-                <li>🔒 Uses hardcoded safe addresses</li>
-                <li>⚡ Instant simulation - no blockchain wait</li>
-                <li>🎯 Perfect for demonstrations and testing</li>
-                <li>📱 Both ETH↔ATOM directions supported</li>
-              </>
-            ) : (
-              <>
-                <li>Funds are locked with hashlock/timelock</li>
-                <li>Either both parties get their tokens or both get refunds</li>
-                <li>No counterparty risk</li>
-              </>
-            )}
+            <li>Funds are locked with hashlock/timelock</li>
+            <li>Either both parties get their tokens or both get refunds</li>
+            <li>No counterparty risk</li>
           </ul>
         </div>
       </CardContent>
