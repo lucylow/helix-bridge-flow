@@ -50,6 +50,22 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
       return;
     }
 
+    // Clean and validate recipient address
+    const cleanedRecipientAddress = recipientAddress.trim();
+    
+    // Validate address format
+    if (getTokenChain(toToken) === "Ethereum") {
+      if (!ethers.isAddress(cleanedRecipientAddress)) {
+        alert("Please enter a valid Ethereum address (0x...)");
+        return;
+      }
+    } else if (getTokenChain(toToken) === "Cosmos") {
+      if (!cleanedRecipientAddress.startsWith('cosmos1') || cleanedRecipientAddress.length < 39) {
+        alert("Please enter a valid Cosmos address (cosmos1...)");
+        return;
+      }
+    }
+
     setIsCreating(true);
     
     try {
@@ -58,7 +74,7 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         fromToken,
         toToken,
         amount,
-        recipientAddress,
+        recipientAddress: cleanedRecipientAddress,
         timelockDuration: parseInt(timelockDuration),
         timestamp: Date.now(),
         direction: getTokenChain(fromToken) === "Ethereum" ? "eth-to-cosmos" : "cosmos-to-eth"
@@ -75,7 +91,7 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         
         console.log("Creating real Ethereum HTLC...");
         const tx = await atomicSwapEngine.createEthereumSwap(
-          recipientAddress,
+          cleanedRecipientAddress,
           amount,
           hashlock,
           parseInt(timelockDuration)
