@@ -298,31 +298,31 @@ npm run test
 
 ## 📊 Judging Criteria Alignment
 
-### Technicality ⭐⭐⭐⭐⭐
+### Technicality 
 - Complex cross-chain atomic swap implementation
 - Advanced cryptographic protocols (hashlock/timelock)
 - Multi-chain smart contract deployment
 - Professional-grade architecture
 
-### Originality ⭐⭐⭐⭐⭐
+### Originality 
 - Novel extension of 1inch Fusion+ to Cosmos
 - First-of-its-kind Ethereum ↔ Cosmos atomic swaps
 - Innovative UI/UX for cross-chain operations
 - Creative integration of existing technologies
 
-### Practicality ⭐⭐⭐⭐⭐
+### Practicality 
 - Fully functional end-to-end implementation
 - Ready for mainnet deployment
 - Real testnet demonstrations
 - Production-ready code quality
 
-### Usability ⭐⭐⭐⭐⭐
+### Usability
 - Intuitive wallet connection flow
 - Professional React interface
 - Clear swap creation process
 - Comprehensive status tracking
 
-### WOW Factor ⭐⭐⭐⭐⭐
+### WOW Factor 
 - Seamless cross-chain experience
 - Beautiful, modern interface
 - Complete atomic swap demonstration
