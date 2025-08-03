@@ -17,6 +17,7 @@ const Index = () => {
   const [walletsConnected, setWalletsConnected] = useState({ ethereum: false, cosmos: false });
   const [hasError, setHasError] = useState(false);
   const [activeSwap, setActiveSwap] = useState(null);
+  const [networkMode, setNetworkMode] = useState<"mainnet" | "testnet" | "demo">("demo");
 
   // Keyboard shortcut for judging helper
   useEffect(() => {
@@ -82,13 +83,20 @@ const Index = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column: Dual Wallet Status */}
           <div className="space-y-6">
-            <WalletStatus onWalletConnect={handleWalletConnect} />
+            <WalletStatus 
+              onWalletConnect={handleWalletConnect} 
+              networkMode={networkMode}
+              setNetworkMode={setNetworkMode}
+            />
             
           </div>
 
           {/* Center Column: Swap Form and Tracker */}
           <div className="space-y-6">
-            <SwapForm onCreateSwap={handleCreateSwap} />
+            <SwapForm 
+              onCreateSwap={handleCreateSwap} 
+              networkMode={networkMode}
+            />
             {activeSwap && <SwapTracker activeSwap={activeSwap} />}
           </div>
 

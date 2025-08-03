@@ -13,9 +13,10 @@ import "../types/wallet";
 
 interface SwapFormProps {
   onCreateSwap: (swapData: any) => void;
+  networkMode: "mainnet" | "testnet" | "demo";
 }
 
-const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
+const SwapForm = ({ onCreateSwap, networkMode }: SwapFormProps) => {
   const [fromToken, setFromToken] = useState("ETH");
   const [toToken, setToToken] = useState("ATOM");
   const [amount, setAmount] = useState("");
@@ -52,24 +53,25 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
 
   const [isCreating, setIsCreating] = useState(false);
 
-  // DEMO MODE: Check if we're in demo mode
-  const isDemoMode = window.location.search.includes('demo') || window.location.pathname.includes('demo');
+  // Use networkMode from parent to determine behavior
+  const isDemoMode = networkMode === "demo";
+  const isTestnetMode = networkMode === "testnet";
 
-  // DEMO MODE: Auto-fill hardcoded addresses
+  // Auto-fill hardcoded addresses for demo/testnet modes
   useEffect(() => {
-    if (isDemoMode) {
+    if (isDemoMode || isTestnetMode) {
       if (getTokenChain(toToken) === "Ethereum") {
         setRecipientAddress("0x758282EFA1887244c7dBe5b7d585887CF345e8a4");
       } else if (getTokenChain(toToken) === "Cosmos") {
         setRecipientAddress("cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m");
       }
     }
-  }, [toToken, isDemoMode]);
+  }, [toToken, isDemoMode, isTestnetMode]);
 
-  // Validate recipient address in real-time (skip validation in demo mode)
+  // Validate recipient address in real-time (skip validation in demo/testnet mode)
   useEffect(() => {
-    if (isDemoMode) {
-      // In demo mode, always show as valid
+    if (isDemoMode || isTestnetMode) {
+      // In demo/testnet mode, always show as valid
       setAddressValidation({
         isValid: true,
         error: null,
@@ -127,17 +129,17 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
       return;
     }
 
-    // DEMO MODE: Hardcode working addresses
+    // Use hardcoded working addresses for demo/testnet modes
     let finalRecipientAddress = recipientAddress;
     
-    if (isDemoMode) {
+    if (isDemoMode || isTestnetMode) {
       // Force hardcoded demo addresses that we know work
       if (getTokenChain(toToken) === "Ethereum") {
         finalRecipientAddress = "0x758282EFA1887244c7dBe5b7d585887CF345e8a4";
-        console.log("DEMO MODE: Using hardcoded Ethereum address:", finalRecipientAddress);
+        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Using hardcoded Ethereum address:`, finalRecipientAddress);
       } else if (getTokenChain(toToken) === "Cosmos") {
         finalRecipientAddress = "cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m";
-        console.log("DEMO MODE: Using hardcoded Cosmos address:", finalRecipientAddress);
+        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Using hardcoded Cosmos address:`, finalRecipientAddress);
       }
     } else {
       // Production mode: Use validation
@@ -163,12 +165,13 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         timelockDuration: parseInt(timelockDuration),
         timestamp: Date.now(),
         direction: getTokenChain(fromToken) === "Ethereum" ? "eth-to-cosmos" : "cosmos-to-eth",
-        isDemoMode
+        isDemoMode,
+        isTestnetMode
       };
 
-      if (isDemoMode) {
-        // DEMO MODE: Always succeed with simulated data
-        console.log("DEMO MODE: Simulating successful swap creation");
+      if (isDemoMode || isTestnetMode) {
+        // DEMO/TESTNET MODE: Always succeed with simulated data
+        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Simulating successful swap creation`);
         
         // Generate fake transaction data for demo
         const fakeHash = `0x${Math.random().toString(16).substr(2, 64)}`;
@@ -182,7 +185,7 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         swapData.demoMode = true;
         
         // Simulate successful transaction
-        alert(`✅ DEMO: Swap created successfully! 
+        alert(`✅ ${isDemoMode ? 'DEMO' : 'TESTNET'}: Swap created successfully! 
 From: ${amount} ${fromToken} 
 To: ${toToken}
 Recipient: ${finalRecipientAddress}
@@ -223,9 +226,9 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
       }
       
     } catch (error: any) {
-      if (isDemoMode) {
-        // In demo mode, never show errors - always succeed
-        console.log("DEMO MODE: Forcing success despite error:", error);
+      if (isDemoMode || isTestnetMode) {
+        // In demo/testnet mode, never show errors - always succeed
+        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Forcing success despite error:`, error);
         
         const fakeHash = `0x${Math.random().toString(16).substr(2, 64)}`;
         const fakeSecret = `0x${Math.random().toString(16).substr(2, 64)}`;
@@ -248,11 +251,11 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
           isDemoMode: true
         };
         
-        alert(`✅ DEMO: Swap created successfully! 
+        alert(`✅ ${isDemoMode ? 'DEMO' : 'TESTNET'}: Swap created successfully! 
 From: ${amount} ${fromToken} 
 To: ${toToken}
 Recipient: ${finalRecipientAddress}
-Demo Transaction: ${fakeHash.slice(0, 10)}...`);
+${isDemoMode ? 'Demo' : 'Testnet'} Transaction: ${fakeHash.slice(0, 10)}...`);
         
         onCreateSwap(swapData);
       } else {
@@ -442,7 +445,7 @@ Demo Transaction: ${fakeHash.slice(0, 10)}...`);
         <Button 
           onClick={handleCreateSwap} 
           className="w-full"
-          disabled={!amount || (!isDemoMode && !addressValidation.isValid) || isCreating}
+          disabled={!amount || (networkMode === "mainnet" && !addressValidation.isValid) || isCreating}
         >
           {isCreating ? (
             <>

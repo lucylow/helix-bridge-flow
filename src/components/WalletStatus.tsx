@@ -12,10 +12,11 @@ type NetworkMode = "mainnet" | "testnet" | "demo";
 
 interface WalletStatusProps {
   onWalletConnect: (chain: "ethereum" | "cosmos") => void;
+  networkMode: NetworkMode;
+  setNetworkMode: (mode: NetworkMode) => void;
 }
 
-const WalletStatus = ({ onWalletConnect }: WalletStatusProps) => {
-  const [networkMode, setNetworkMode] = useState<NetworkMode>("demo");
+const WalletStatus = ({ onWalletConnect, networkMode, setNetworkMode }: WalletStatusProps) => {
   const [ethState, setEthState] = useState<WalletState>("disconnected");
   const [cosmosState, setCosmosState] = useState<WalletState>("disconnected");
   const [ethAddress, setEthAddress] = useState("");
