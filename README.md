@@ -156,7 +156,7 @@ tests/
 - **Real-time Status**: Live swap tracking and history
 
 ### Integration
-- **1inch API**: Hardcoded API key for swap routing and pricing
+- **1inch API**: API key for swap routing and pricing
 - **Cross-chain Communication**: Atomic swap protocol implementation
 - **Testnet Deployment**: Sepolia (Ethereum) + Theta (Cosmos)
 
