@@ -19,6 +19,133 @@ This project extends 1inch's Fusion+ technology to support cross-chain atomic sw
 
 ## 🏗️ Architecture
 
+
+Github path directories 
+
+# GitHub Repository Structure for helix-bridge-flow
+
+## Root Directory Files (upload directly to root):
+```
+/
+├── README.md
+├── .gitignore
+├── todo.md
+```
+
+## Create these folders and upload files accordingly:
+
+### `/docs/` folder:
+```
+docs/
+├── 1inch Fusion+ Cosmos Extension.md
+├── 1inch Fusion+ Cosmos Extension_ Technical Architecture.md
+├── 1inch Fusion+ Cosmos Extension - EthGlobal Unite DeFi Submission.md
+└── manus1-3!!!!!!!!!!!!!!!deleteduselessshit[$12K]EthGlobalUniteDefi__Extend1inchFusion+toCosmos.docx
+```
+
+### `/contracts/` folder (Ethereum):
+```
+contracts/
+├── contracts/
+│   ├── CrossChainSwap.sol
+│   └── MockERC20.sol
+├── test/
+│   └── CrossChainSwap.test.js
+├── scripts/
+│   └── deploy.js
+└── hardhat.config.js
+```
+
+### `/cosmos/` folder:
+```
+cosmos/
+├── x/
+│   └── atomicswap/
+│       ├── types/
+│       │   ├── msgs.go
+│       │   ├── atomic_swap.go
+│       │   ├── keys.go
+│       │   ├── codec.go
+│       │   ├── events.go
+│       │   ├── expected_keepers.go
+│       │   ├── params.go
+│       │   └── partial_fill.go
+│       └── keeper/
+│           └── keeper.go
+└── wasm/
+    └── contracts/
+        └── escrow/
+            ├── Cargo.toml
+            └── src/
+                ├── lib.rs
+                ├── error.rs
+                ├── msg.rs
+                ├── state.rs
+                └── contract.rs
+```
+
+### `/frontend/` folder:
+```
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── ui/
+│   │   │   ├── button.jsx
+│   │   │   ├── input.jsx
+│   │   │   ├── label.jsx
+│   │   │   ├── card.jsx
+│   │   │   ├── select.jsx
+│   │   │   ├── textarea.jsx
+│   │   │   ├── alert.jsx
+│   │   │   ├── badge.jsx
+│   │   │   └── dialog.jsx
+│   │   ├── SwapForm.jsx
+│   │   ├── SwapHistory.jsx
+│   │   └── WalletConnect.jsx
+│   ├── App.jsx
+│   └── App.css
+├── public/
+├── index.html
+├── package.json
+├── package-lock.json
+├── bun.lockb
+├── components.json
+├── eslint.config.js
+├── postcss.config.js
+├── tailwind.config.ts
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+```
+
+### `/backend/` folder:
+```
+backend/
+├── src/
+│   ├── routes/
+│   │   ├── oneinch_api.py
+│   │   ├── atomic_swap.py
+│   │   ├── partial_fills.py
+│   │   ├── relayer.py
+│   │   ├── resolver.py
+│   │   ├── advanced_features.py
+│   │   ├── demo_endpoints.py
+│   │   ├── threshold_encryption.py
+│   │   ├── intent_routing.py
+│   │   └── recovery_system.py
+│   └── main.py
+└── requirements.txt
+```
+
+### `/tests/` folder:
+```
+tests/
+├── test-atomic-swap.js
+└── package.json
+```
+
+
 ### Smart Contracts
 - **Ethereum**: `CrossChainSwap.sol` - Handles ETH and ERC20 token escrow
 - **Cosmos**: CosmWasm escrow contract - Manages ATOM and IBC tokens
