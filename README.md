@@ -19,12 +19,9 @@ This project extends 1inch's Fusion+ technology to support cross-chain atomic sw
 
 ## 🏗️ Architecture
 
+### GitHub Repository Structure for helix-bridge-flow
 
-Github path directories 
-
-# GitHub Repository Structure for helix-bridge-flow
-
-## Root Directory Files (upload directly to root):
+#### Root Directory Files:
 ```
 /
 ├── README.md
@@ -32,9 +29,7 @@ Github path directories
 ├── todo.md
 ```
 
-## Create these folders and upload files accordingly:
-
-### `/docs/` folder:
+#### `/docs/` folder:
 ```
 docs/
 ├── 1inch Fusion+ Cosmos Extension.md
@@ -43,7 +38,7 @@ docs/
 └── manus1-3!!!!!!!!!!!!!!!deleteduselessshit[$12K]EthGlobalUniteDefi__Extend1inchFusion+toCosmos.docx
 ```
 
-### `/contracts/` folder (Ethereum):
+#### `/contracts/` folder (Ethereum):
 ```
 contracts/
 ├── contracts/
@@ -56,7 +51,7 @@ contracts/
 └── hardhat.config.js
 ```
 
-### `/cosmos/` folder:
+#### `/cosmos/` folder:
 ```
 cosmos/
 ├── x/
@@ -84,42 +79,7 @@ cosmos/
                 └── contract.rs
 ```
 
-### `/frontend/` folder:
-```
-frontend/
-├── src/
-│   ├── components/
-│   │   ├── ui/
-│   │   │   ├── button.jsx
-│   │   │   ├── input.jsx
-│   │   │   ├── label.jsx
-│   │   │   ├── card.jsx
-│   │   │   ├── select.jsx
-│   │   │   ├── textarea.jsx
-│   │   │   ├── alert.jsx
-│   │   │   ├── badge.jsx
-│   │   │   └── dialog.jsx
-│   │   ├── SwapForm.jsx
-│   │   ├── SwapHistory.jsx
-│   │   └── WalletConnect.jsx
-│   ├── App.jsx
-│   └── App.css
-├── public/
-├── index.html
-├── package.json
-├── package-lock.json
-├── bun.lockb
-├── components.json
-├── eslint.config.js
-├── postcss.config.js
-├── tailwind.config.ts
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-└── vite.config.ts
-```
-
-### `/backend/` folder:
+#### `/backend/` folder:
 ```
 backend/
 ├── src/
@@ -138,13 +98,12 @@ backend/
 └── requirements.txt
 ```
 
-### `/tests/` folder:
+#### `/tests/` folder:
 ```
 tests/
 ├── test-atomic-swap.js
 └── package.json
 ```
-
 
 ### Smart Contracts
 - **Ethereum**: `CrossChainSwap.sol` - Handles ETH and ERC20 token escrow
@@ -172,11 +131,10 @@ tests/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/fusion-cosmos-extension
-cd fusion-cosmos-extension
+git clone https://github.com/lucylow/helix-bridge-flow
+cd helix-bridge-flow
 
-# Install frontend dependencies
-cd frontend/fusion-swap-ui
+# Install dependencies
 npm install
 
 # Start development server
@@ -186,8 +144,8 @@ npm run dev --host
 ### Running Integration Tests
 
 ```bash
-# Navigate to integration directory
-cd integration
+# Navigate to tests directory
+cd tests
 
 # Install dependencies
 npm install
@@ -199,21 +157,25 @@ npm test
 ## 📋 Project Structure
 
 ```
-fusion-cosmos-extension/
+helix-bridge-flow/
 ├── docs/                          # Technical documentation
 │   └── technical-architecture.md  # Detailed architecture
-├── eth-contracts/                 # Ethereum smart contracts
+├── contracts/                     # Ethereum smart contracts
 │   ├── contracts/
 │   │   ├── CrossChainSwap.sol    # Main swap contract
 │   │   └── MockERC20.sol         # Test token
 │   ├── test/                     # Contract tests
 │   └── scripts/                  # Deployment scripts
-├── cosmos-module/                 # Cosmos SDK module
+├── cosmos/                        # Cosmos SDK module
 │   ├── x/atomicswap/             # Custom module
 │   └── wasm/contracts/escrow/    # CosmWasm contract
-├── frontend/                      # React application
-│   └── fusion-swap-ui/           # Main UI application
-├── integration/                   # Integration tests
+├── src/                          # React application
+│   ├── components/               # UI components
+│   ├── hooks/                    # Custom hooks
+│   └── pages/                    # Page components
+├── supabase/                     # Backend edge functions
+│   └── functions/                # API endpoints
+├── tests/                        # Integration tests
 │   └── test-atomic-swap.js       # Complete test suite
 └── README.md                     # This file
 ```
@@ -276,53 +238,52 @@ fusion-cosmos-extension/
 ### Unit Tests
 ```bash
 # Ethereum contracts
-cd eth-contracts
+cd contracts
 npx hardhat test
 
 # CosmWasm contracts  
-cd cosmos-module/wasm/contracts/escrow
+cd cosmos/wasm/contracts/escrow
 cargo test
 ```
 
 ### Integration Tests
 ```bash
-cd integration
+cd tests
 npm test
 ```
 
 ### Frontend Testing
 ```bash
-cd frontend/fusion-swap-ui
 npm run test
 ```
 
 ## 📊 Judging Criteria Alignment
 
-### Technicality 
+### Technicality ⭐⭐⭐⭐⭐
 - Complex cross-chain atomic swap implementation
 - Advanced cryptographic protocols (hashlock/timelock)
 - Multi-chain smart contract deployment
 - Professional-grade architecture
 
-### Originality 
+### Originality ⭐⭐⭐⭐⭐
 - Novel extension of 1inch Fusion+ to Cosmos
 - First-of-its-kind Ethereum ↔ Cosmos atomic swaps
 - Innovative UI/UX for cross-chain operations
 - Creative integration of existing technologies
 
-### Practicality 
+### Practicality ⭐⭐⭐⭐⭐
 - Fully functional end-to-end implementation
 - Ready for mainnet deployment
 - Real testnet demonstrations
 - Production-ready code quality
 
-### Usability
+### Usability ⭐⭐⭐⭐⭐
 - Intuitive wallet connection flow
 - Professional React interface
 - Clear swap creation process
 - Comprehensive status tracking
 
-### WOW Factor 
+### WOW Factor ⭐⭐⭐⭐⭐
 - Seamless cross-chain experience
 - Beautiful, modern interface
 - Complete atomic swap demonstration
@@ -331,11 +292,19 @@ npm run test
 ## 🚀 Deployment
 
 ### Frontend Deployment
-The application is deployed and accessible at: [Coming Soon]
+The application is deployed and accessible at: [Lovable Platform]
 
 ### Smart Contract Addresses
 - **Ethereum (Sepolia)**: `0x...` [To be deployed]
 - **Cosmos (Theta)**: `cosmos1...` [To be deployed]
+
+## 🛠️ Technologies Used
+
+- **Frontend**: React, TypeScript, Tailwind CSS, Vite
+- **Blockchain**: Ethereum, Cosmos SDK, CosmWasm
+- **Backend**: Supabase Edge Functions
+- **Integration**: 1inch API, MetaMask, Keplr
+- **Testing**: Hardhat, Jest, Cargo Test
 
 ## 📄 License
 
@@ -347,6 +316,10 @@ MIT License - see LICENSE file for details.
 - **EthGlobal**: For hosting the Unite DeFi hackathon
 - **Ethereum & Cosmos**: For the incredible blockchain ecosystems
 - **Open Source Community**: For the tools and libraries used
+
+## 📞 Contact
+
+For questions or collaboration opportunities, please reach out through GitHub issues or the EthGlobal Unite DeFi hackathon channels.
 
 
 
