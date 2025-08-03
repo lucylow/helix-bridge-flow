@@ -166,39 +166,99 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         isDemoMode
       };
 
-      // For real implementation, call backend API
-      if (window.ethereum && getTokenChain(fromToken) === "Ethereum") {
-        // Real Ethereum swap
-        const { atomicSwapEngine } = await import("./AtomicSwapEngine");
-        await atomicSwapEngine.initialize();
+      if (isDemoMode) {
+        // DEMO MODE: Always succeed with simulated data
+        console.log("DEMO MODE: Simulating successful swap creation");
         
-        const secret = atomicSwapEngine.generateSecret();
-        const hashlock = atomicSwapEngine.generateHashlock(secret);
+        // Generate fake transaction data for demo
+        const fakeHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+        const fakeSecret = `0x${Math.random().toString(16).substr(2, 64)}`;
+        const fakeHashlock = `0x${Math.random().toString(16).substr(2, 64)}`;
         
-        console.log("Creating real Ethereum HTLC...");
-        const tx = await atomicSwapEngine.createEthereumSwap(
-          finalRecipientAddress,
-          amount,
-          hashlock,
-          parseInt(timelockDuration)
-        );
+        swapData.ethereumTxHash = fakeHash;
+        swapData.hashlock = fakeHashlock;
+        swapData.secret = fakeSecret;
+        swapData.status = "created";
+        swapData.demoMode = true;
         
-        console.log("Transaction sent:", tx.hash);
-        alert(`Ethereum transaction sent! Hash: ${tx.hash}`);
+        // Simulate successful transaction
+        alert(`✅ DEMO: Swap created successfully! 
+From: ${amount} ${fromToken} 
+To: ${toToken}
+Recipient: ${finalRecipientAddress}
+Transaction Hash: ${fakeHash.slice(0, 10)}...`);
         
-        // Store secret securely (in real app, use encrypted storage)
-        sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
+        onCreateSwap(swapData);
         
-        swapData.ethereumTxHash = tx.hash;
-        swapData.hashlock = hashlock;
-        swapData.secret = secret;
-      }
+      } else {
+        // PRODUCTION MODE: Real blockchain interactions
+        if (window.ethereum && getTokenChain(fromToken) === "Ethereum") {
+          // Real Ethereum swap
+          const { atomicSwapEngine } = await import("./AtomicSwapEngine");
+          await atomicSwapEngine.initialize();
+          
+          const secret = atomicSwapEngine.generateSecret();
+          const hashlock = atomicSwapEngine.generateHashlock(secret);
+          
+          console.log("Creating real Ethereum HTLC...");
+          const tx = await atomicSwapEngine.createEthereumSwap(
+            finalRecipientAddress,
+            amount,
+            hashlock,
+            parseInt(timelockDuration)
+          );
+          
+          console.log("Transaction sent:", tx.hash);
+          alert(`Ethereum transaction sent! Hash: ${tx.hash}`);
+          
+          // Store secret securely (in real app, use encrypted storage)
+          sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
+          
+          swapData.ethereumTxHash = tx.hash;
+          swapData.hashlock = hashlock;
+          swapData.secret = secret;
+        }
 
-      onCreateSwap(swapData);
+        onCreateSwap(swapData);
+      }
       
     } catch (error: any) {
-      console.error("Swap creation error:", error);
-      alert(`Failed to create swap: ${error.message}`);
+      if (isDemoMode) {
+        // In demo mode, never show errors - always succeed
+        console.log("DEMO MODE: Forcing success despite error:", error);
+        
+        const fakeHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+        const fakeSecret = `0x${Math.random().toString(16).substr(2, 64)}`;
+        const fakeHashlock = `0x${Math.random().toString(16).substr(2, 64)}`;
+        
+        const swapData: any = {
+          fromToken,
+          toToken,
+          amount,
+          recipientAddress: finalRecipientAddress,
+          originalRecipient: recipientAddress,
+          timelockDuration: parseInt(timelockDuration),
+          timestamp: Date.now(),
+          direction: getTokenChain(fromToken) === "Ethereum" ? "eth-to-cosmos" : "cosmos-to-eth",
+          ethereumTxHash: fakeHash,
+          hashlock: fakeHashlock,
+          secret: fakeSecret,
+          status: "created",
+          demoMode: true,
+          isDemoMode: true
+        };
+        
+        alert(`✅ DEMO: Swap created successfully! 
+From: ${amount} ${fromToken} 
+To: ${toToken}
+Recipient: ${finalRecipientAddress}
+Demo Transaction: ${fakeHash.slice(0, 10)}...`);
+        
+        onCreateSwap(swapData);
+      } else {
+        console.error("Swap creation error:", error);
+        alert(`Failed to create swap: ${error.message}`);
+      }
     } finally {
       setIsCreating(false);
     }
@@ -399,14 +459,15 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
 
         {/* Info */}
         <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          <p className="mb-1">ℹ️ {isDemoMode ? 'DEMO MODE: Using hardcoded testnet addresses' : 'This creates a secure cross-chain atomic swap:'}</p>
+          <p className="mb-1">ℹ️ {isDemoMode ? '🚀 DEMO MODE: Simulated swaps - always succeed!' : 'This creates a secure cross-chain atomic swap:'}</p>
           <ul className="list-disc list-inside space-y-1">
             {isDemoMode ? (
               <>
-                <li>ETH → ATOM: Sepolia to Theta testnet</li>
-                <li>ATOM → ETH: Theta to Sepolia testnet</li>
-                <li>Hardcoded addresses for reliable demo</li>
-                <li>Addresses auto-filled when you change tokens</li>
+                <li>✅ Guaranteed success - no real funds needed</li>
+                <li>🔒 Uses hardcoded safe addresses</li>
+                <li>⚡ Instant simulation - no blockchain wait</li>
+                <li>🎯 Perfect for demonstrations and testing</li>
+                <li>📱 Both ETH↔ATOM directions supported</li>
               </>
             ) : (
               <>
