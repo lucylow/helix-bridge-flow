@@ -3,7 +3,8 @@ import { ethers } from "ethers";
 // Contract addresses for testnet deployment
 const CONTRACTS = {
   sepolia: {
-    crossChainSwap: "0x...", // Your deployed contract address
+    // Use the hardcoded demo address for consistency
+    crossChainSwap: "0x758282EFA1887244c7dBe5b7d585887CF345e8a4", // Demo contract address
     mockERC20: "0x...", // Your mock token address
   }
 };

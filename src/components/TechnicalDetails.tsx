@@ -20,6 +20,9 @@ const TechnicalDetails = ({ isExpanded = true }: TechnicalDetailsProps) => {
     setTimeout(() => setCopiedItem(null), 2000);
   };
 
+  // Check if we're in demo mode to use hardcoded demo addresses
+  const isDemoMode = window.location.search.includes('demo') || window.location.pathname.includes('demo');
+  
   const technicalData = {
     hashlock: {
       value: "0xa1b2c3d4e5f6789012345678901234567890abcdef",
@@ -32,8 +35,9 @@ const TechnicalDetails = ({ isExpanded = true }: TechnicalDetailsProps) => {
       blocks: "1,247"
     },
     contracts: {
-      ethereum: "0x742d35Cc7a4C9c8f1b8B8D8fA8f8f8f8f8f8f8f8",
-      cosmos: "cosmos1x3z4y5w6v7u8t9s0r1q2p3o4n5m6l7k8j9i0h1"
+      // Use the hardcoded demo addresses
+      ethereum: isDemoMode ? "0x758282EFA1887244c7dBe5b7d585887CF345e8a4" : "0x742d35Cc7a4C9c8f1b8B8D8fA8f8f8f8f8f8f8f8",
+      cosmos: isDemoMode ? "cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m" : "cosmos1x3z4y5w6v7u8t9s0r1q2p3o4n5m6l7k8j9i0h1"
     },
     gas: {
       estimated: "0.0023 ETH",

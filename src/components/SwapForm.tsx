@@ -134,10 +134,10 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
       // Force hardcoded demo addresses that we know work
       if (getTokenChain(toToken) === "Ethereum") {
         finalRecipientAddress = "0x758282EFA1887244c7dBe5b7d585887CF345e8a4";
-        console.log("DEMO MODE: Using hardcoded Ethereum address");
+        console.log("DEMO MODE: Using hardcoded Ethereum address:", finalRecipientAddress);
       } else if (getTokenChain(toToken) === "Cosmos") {
         finalRecipientAddress = "cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m";
-        console.log("DEMO MODE: Using hardcoded Cosmos address");
+        console.log("DEMO MODE: Using hardcoded Cosmos address:", finalRecipientAddress);
       }
     } else {
       // Production mode: Use validation
