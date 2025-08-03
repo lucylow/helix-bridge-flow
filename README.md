@@ -1,5 +1,7 @@
 # Helix Cross-Chain : 1inch Fusion+ Cosmos Extension (Ethereum <-> Cosmos)
 
+![](https://github.com/lucylow/helix-bridge-flow/blob/main/images/ChatGPT%20Image%20Aug%203,%202025,%2011_37_06%20AM.png?raw=true)
+
 **🏆 EthGlobal Unite DeFi Hackathon Submission**
 
 A novel extension for 1inch Cross-chain Swap (Fusion+) that enables trustless atomic swaps between Ethereum and Cosmos networks with hashlock/timelock functionality and bidirectional swap capabilities.
@@ -7,6 +9,8 @@ A novel extension for 1inch Cross-chain Swap (Fusion+) that enables trustless at
 ## 🎯 Project Overview
 
 This project extends 1inch's Fusion+ technology to support cross-chain atomic swaps between Ethereum and Cosmos ecosystems. It implements a complete solution with smart contracts, CosmWasm contracts, and a professional frontend interface.
+
+![](https://github.com/lucylow/helix-bridge-flow/blob/main/images/ChatGPT%20Image%20Aug%203,%202025,%2011_49_21%20AM.png?raw=true)
 
 ### Key Features
 
@@ -16,6 +20,8 @@ This project extends 1inch's Fusion+ technology to support cross-chain atomic sw
 - ✅ **1inch API Integration**: Leveraging 1inch's powerful swap infrastructure
 - ✅ **Professional UI**: Modern React interface with wallet integration
 - ✅ **Onchain Execution**: Demonstrated on Sepolia and Theta testnets
+
+![](https://github.com/lucylow/helix-bridge-flow/blob/main/images/Screenshot%20(471).png?raw=true)
 
 ## 🏗️ Architecture
 
@@ -114,6 +120,8 @@ tests/
 - **Wallet Integration**: MetaMask (Ethereum) + Keplr (Cosmos)
 - **Real-time Status**: Live swap tracking and history
 
+- ![](https://github.com/lucylow/helix-bridge-flow/blob/main/images/Screenshot%20(470).png?raw=true)
+
 ### Integration
 - **1inch API**: API key for swap routing and pricing
 - **Cross-chain Communication**: Atomic swap protocol implementation
@@ -210,6 +218,8 @@ helix-bridge-flow/
 - **Tokens**: ATOM, OSMO, JUNO, STARS
 
 ## 🎮 Demo Instructions
+
+  ![](https://github.com/lucylow/helix-bridge-flow/blob/main/images/Screenshot%20(468).png?raw=true)
 
 ### Creating an Atomic Swap
 
