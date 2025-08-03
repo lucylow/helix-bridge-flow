@@ -162,32 +162,6 @@ npm install
 npm test
 ```
 
-## 📋 Project Structure
-
-```
-helix-bridge-flow/
-├── docs/                          # Technical documentation
-│   └── technical-architecture.md  # Detailed architecture
-├── contracts/                     # Ethereum smart contracts
-│   ├── contracts/
-│   │   ├── CrossChainSwap.sol    # Main swap contract
-│   │   └── MockERC20.sol         # Test token
-│   ├── test/                     # Contract tests
-│   └── scripts/                  # Deployment scripts
-├── cosmos/                        # Cosmos SDK module
-│   ├── x/atomicswap/             # Custom module
-│   └── wasm/contracts/escrow/    # CosmWasm contract
-├── src/                          # React application
-│   ├── components/               # UI components
-│   ├── hooks/                    # Custom hooks
-│   └── pages/                    # Page components
-├── supabase/                     # Backend edge functions
-│   └── functions/                # API endpoints
-├── tests/                        # Integration tests
-│   └── test-atomic-swap.js       # Complete test suite
-└── README.md                     # This file
-```
-
 ## 🔧 Technical Implementation
 
 ### Atomic Swap Protocol
