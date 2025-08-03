@@ -273,6 +273,124 @@ npm run test
 - Complete atomic swap demonstration
 - Integration with major DeFi infrastructure
 
+What inspired your project?
+What tools did you use, and why?
+What challenges did you solve, and how?
+
+
+## What Inspired Your Project?
+
+The DeFi Cross-Chain Problem: The inspiration came from a fundamental limitation in the current DeFi ecosystem - the lack of trustless, secure bridges between Ethereum and Cosmos networks. While 1inch's Fusion+ technology revolutionized Ethereum-based swaps, there was no elegant solution for atomic swaps between EVM and non-EVM ecosystems.
+
+1inch Fusion+ Extension Vision: We saw an opportunity to extend 1inch's proven technology into uncharted territory - the Cosmos ecosystem. The goal was to preserve all the security guarantees (hashlock/timelock) while enabling bidirectional swaps between two fundamentally different blockchain architectures.
+
+Real-World Need: Many users hold assets on both Ethereum and Cosmos chains but lack a secure, trustless way to swap between them. Existing solutions require trusted intermediaries or complex wrapped token mechanisms that introduce counterparty risk.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2.## What Tools Did You Use, and Why?
+
+### Frontend Stack
+- React + TypeScript + Vite: For a fast, type-safe development experience with hot module reloading
+- Tailwind CSS + Shadcn/ui: For beautiful, consistent UI components and rapid styling
+- Ethers.js: For Ethereum blockchain interactions and wallet connectivity
+- CosmJS: For Cosmos blockchain interactions and Keplr wallet integration
+
+### Backend Infrastructure
+- Supabase Edge Functions: Serverless Deno runtime for secure API proxy and cross-chain coordination
+- Python Flask: For the advanced routing and relayer services
+- PostgreSQL: Via Supabase for swap state management and history tracking
+
+### Blockchain Technologies
+- Solidity (Ethereum): Smart contracts with OpenZeppelin for security standards
+- Cosmos SDK: Custom x/atomicswap module for native blockchain-level support
+- CosmWasm: Rust-based WebAssembly contracts for advanced escrow functionality
+- Hardhat: For Ethereum smart contract development, testing, and deployment
+
+### 1inch Integration
+- 1inch API v6.0: Real-time quotes, optimal routing, and gas estimation
+- Fusion+ Technology: Extended to support cross-chain atomic swaps
+- API Key Integration: Secure proxy through Supabase Edge Functions
+
+### Why These Choices?
+1. Security First: Rust (CosmWasm) and Solidity provide memory safety and battle-tested security
+2. Developer Experience: TypeScript, Vite, and modern tooling for rapid iteration
+3. Real Production API: Using actual 1inch API (not mocked) for authentic swap data
+4. Cross-Chain Compatibility: Ethers.js + CosmJS covers both ecosystems seamlessly
+
+
+
+
+
+
+
+
+
+
+
+
+3.## What Challenges Did You Solve, and How?
+
+### Challenge 1: Hashlock/Timelock Across Different VMs
+Problem: Ethereum uses EVM while Cosmos uses WebAssembly - different execution environments with different cryptographic libraries.
+
+Solution: 
+- Standardized on SHA-256 for hashlock generation across both platforms
+- Implemented identical secret validation logic in both Solidity and Rust
+- Created cross-chain compatible timestamp handling for timelock synchronization
+
+```rust
+// CosmWasm validation (Rust)
+pub fn validate_secret(&self, secret: &str) -> bool {
+    let hash = Sha256::digest(secret.as_bytes());
+    hex::encode(hash) == self.hashlock
+}
+```
+
+### Challenge 2: Address Format Incompatibility
+Problem: Ethereum uses 20-byte hex addresses (`0x...`) while Cosmos uses bech32 format (`cosmos1...`).
+
+Solution:
+- Built address validation and conversion utilities
+- Implemented ENS resolution for Ethereum addresses
+- Created automatic address format detection and validation
+- Added support for cross-chain recipient address handling
+
+### Challenge 3: Cross-Chain Secret Coordination
+Problem: How to securely coordinate secret revelation across two independent blockchains without trusted relayers.
+
+Solution:
+- Implemented atomic swap protocol with proper timelock staggering
+- Cosmos timelock = Ethereum timelock + safety margin
+- Built monitoring systems that watch for secret revelation on either chain
+- Created fallback refund mechanisms with appropriate time delays
+
+
+The most technically challenging aspect was creating a truly atomic protocol across heterogeneous blockchain networks while maintaining the security guarantees that make atomic swaps trustworthy. We solved this through careful cryptographic design, proper timelock management, and extensive testing across both test networks.
+
+
+
+
 ## 🚀 Deployment
 
 ### Frontend Deployment
