@@ -279,10 +279,7 @@ ${isDemoMode ? 'Demo' : 'Testnet'} Transaction: ${fakeHash.slice(0, 10)}...`);
           Create Atomic Swap {isDemoMode && <Badge variant="secondary">DEMO</Badge>}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          {isDemoMode ? 
-            "Demo mode with hardcoded Sepolia ↔ Theta addresses" :
-            "Create a trustless cross-chain swap with hashlock/timelock protection"
-          }
+          Create a trustless cross-chain swap with hashlock/timelock protection
         </p>
       </CardHeader>
       
