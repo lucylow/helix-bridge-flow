@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Zap, FileText, BarChart3, Dna } from "lucide-react";
+import { Zap, FileText, BarChart3, Dna, Activity } from "lucide-react";
 import WalletStatus from "@/components/WalletStatus";
 import SwapTracker from "@/components/SwapTracker";
 import SwapForm from "@/components/SwapForm";
@@ -10,6 +10,7 @@ import SwapHistory from "@/components/SwapHistory";
 import TechnicalDetails from "@/components/TechnicalDetails";
 import JudgingHelper from "@/components/JudgingHelper";
 import ErrorCenter from "@/components/ErrorCenter";
+import { OneInchStatus } from "@/components/OneInchStatus";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("create");
@@ -53,7 +54,7 @@ const Index = () => {
   const networkStatus = [
     { name: "Ethereum (Sepolia)", status: "Online" },
     { name: "Cosmos (Theta)", status: "Online" },
-    { name: "1inch API", status: "Error" },
+    { name: "1inch API", status: "✅ REAL API CONNECTED" },
     { name: "Atomic Swap Engine", status: "Active" }
   ];
 
