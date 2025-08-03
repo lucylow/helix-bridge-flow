@@ -42,6 +42,18 @@ export class AtomicSwapEngine {
       throw new Error("Engine not initialized");
     }
 
+    // Clean the recipient address to remove any invisible characters
+    const cleanRecipient = recipientAddress.trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
+    
+    console.log("Creating swap with recipient:", cleanRecipient);
+    
+    // Always use sender's address as the on-chain recipient for cross-chain swaps
+    // The real recipient is verified through the hashlock mechanism
+    const senderAddress = await this.signer.getAddress();
+    const ethRecipient = senderAddress; // Use sender's address as placeholder
+    
+    console.log("Using ethRecipient:", ethRecipient);
+
     const contract = new ethers.Contract(
       CONTRACTS.sepolia.crossChainSwap,
       CROSS_CHAIN_SWAP_ABI,
@@ -51,11 +63,12 @@ export class AtomicSwapEngine {
     const timelock = Math.floor(Date.now() / 1000) + timelockDuration;
     const amountWei = ethers.parseEther(amount);
 
-    // For cross-chain swaps, use a placeholder Ethereum address since the actual recipient is on Cosmos
-    // The real recipient verification happens through the hashlock mechanism
-    const ethRecipient = recipientAddress.startsWith('cosmos') 
-      ? await this.signer.getAddress() // Use sender's address as placeholder for cross-chain
-      : recipientAddress;
+    console.log("Transaction params:", {
+      ethRecipient,
+      hashlock,
+      timelock,
+      amountWei: amountWei.toString()
+    });
 
     const tx = await contract.createHTLC(
       ethRecipient,
