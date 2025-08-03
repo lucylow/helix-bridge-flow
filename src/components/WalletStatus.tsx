@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, CheckCircle, Loader2, AlertCircle, Globe, TestTube, Play } from "lucide-react";
+import { ethers } from "ethers";
+import "../types/wallet";
 
 type WalletState = "disconnected" | "connecting" | "connected" | "error";
 type NetworkMode = "mainnet" | "testnet" | "demo";
@@ -61,6 +63,78 @@ const WalletStatus = ({ onWalletConnect }: WalletStatusProps) => {
     }
   };
 
+  const connectMetaMask = async () => {
+    if (!window.ethereum) {
+      alert("MetaMask is not installed. Please install it to continue.");
+      setEthState("error");
+      return;
+    }
+
+    try {
+      setEthState("connecting");
+      
+      // Request account access
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      
+      // Check network
+      const network = await provider.getNetwork();
+      const expectedChainId = networkMode === "testnet" ? 11155111 : 1; // Sepolia or Mainnet
+      
+      if (Number(network.chainId) !== expectedChainId) {
+        const networkName = networkMode === "testnet" ? "Sepolia" : "Ethereum Mainnet";
+        alert(`Please switch to ${networkName} network in MetaMask`);
+        setEthState("error");
+        return;
+      }
+      
+      setEthAddress(address);
+      setEthState("connected");
+      onWalletConnect("ethereum");
+      
+    } catch (error: any) {
+      console.error("MetaMask connection error:", error);
+      setEthState("error");
+      if (error.code === 4001) {
+        alert("Connection was rejected by user");
+      } else {
+        alert("Failed to connect to MetaMask");
+      }
+    }
+  };
+
+  const connectKeplr = async () => {
+    if (!window.keplr) {
+      alert("Keplr is not installed. Please install it to continue.");
+      setCosmosState("error");
+      return;
+    }
+
+    try {
+      setCosmosState("connecting");
+      
+      const chainId = networkMode === "testnet" ? "theta-testnet-001" : "cosmoshub-4";
+      
+      await window.keplr.enable(chainId);
+      const offlineSigner = window.keplr.getOfflineSigner(chainId);
+      const accounts = await offlineSigner.getAccounts();
+      
+      if (accounts.length > 0) {
+        setCosmosAddress(accounts[0].address);
+        setCosmosState("connected");
+        onWalletConnect("cosmos");
+      }
+      
+    } catch (error: any) {
+      console.error("Keplr connection error:", error);
+      setCosmosState("error");
+      alert("Failed to connect to Keplr");
+    }
+  };
+
   const handleConnect = async (chain: "ethereum" | "cosmos") => {
     if (networkMode === "demo") {
       // Demo mode - simulate connection
@@ -77,11 +151,10 @@ const WalletStatus = ({ onWalletConnect }: WalletStatusProps) => {
         setState("connected");
         onWalletConnect(chain);
       }, 2000);
+    } else if (chain === "ethereum") {
+      await connectMetaMask();
     } else {
-      // Real wallet connection would go here
-      // For now, show error to indicate real wallet integration needed
-      const setState = chain === "ethereum" ? setEthState : setCosmosState;
-      setState("error");
+      await connectKeplr();
     }
   };
 

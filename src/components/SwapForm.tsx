@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowDownUp, Zap, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ethers } from "ethers";
+import "../types/wallet";
 
 interface SwapFormProps {
   onCreateSwap: (swapData: any) => void;
@@ -40,22 +42,64 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
     setToToken(temp);
   };
 
-  const handleCreateSwap = () => {
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleCreateSwap = async () => {
     if (!amount || !recipientAddress) {
       alert("Please fill in all required fields");
       return;
     }
 
-    const swapData = {
-      fromToken,
-      toToken,
-      amount,
-      recipientAddress,
-      timelockDuration: parseInt(timelockDuration),
-      timestamp: Date.now()
-    };
+    setIsCreating(true);
+    
+    try {
+      // Create atomic swap request
+      const swapData: any = {
+        fromToken,
+        toToken,
+        amount,
+        recipientAddress,
+        timelockDuration: parseInt(timelockDuration),
+        timestamp: Date.now(),
+        direction: getTokenChain(fromToken) === "Ethereum" ? "eth-to-cosmos" : "cosmos-to-eth"
+      };
 
-    onCreateSwap(swapData);
+      // For real implementation, call backend API
+      if (window.ethereum && getTokenChain(fromToken) === "Ethereum") {
+        // Real Ethereum swap
+        const { atomicSwapEngine } = await import("./AtomicSwapEngine");
+        await atomicSwapEngine.initialize();
+        
+        const secret = atomicSwapEngine.generateSecret();
+        const hashlock = atomicSwapEngine.generateHashlock(secret);
+        
+        console.log("Creating real Ethereum HTLC...");
+        const tx = await atomicSwapEngine.createEthereumSwap(
+          recipientAddress,
+          amount,
+          hashlock,
+          parseInt(timelockDuration)
+        );
+        
+        console.log("Transaction sent:", tx.hash);
+        alert(`Ethereum transaction sent! Hash: ${tx.hash}`);
+        
+        // Store secret securely (in real app, use encrypted storage)
+        sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
+        
+        swapData.ethereumTxHash = tx.hash;
+        swapData.hashlock = hashlock;
+        swapData.secret = secret;
+      }
+
+      onCreateSwap(swapData);
+      
+    } catch (error: any) {
+      console.error("Swap creation error:", error);
+      alert(`Failed to create swap: ${error.message}`);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const getTokenChain = (symbol: string) => {
@@ -192,10 +236,19 @@ const SwapForm = ({ onCreateSwap }: SwapFormProps) => {
         <Button 
           onClick={handleCreateSwap} 
           className="w-full"
-          disabled={!amount || !recipientAddress}
+          disabled={!amount || !recipientAddress || isCreating}
         >
-          <Zap className="w-4 h-4 mr-2" />
-          Create Atomic Swap
+          {isCreating ? (
+            <>
+              <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-transparent border-t-current" />
+              Creating Swap...
+            </>
+          ) : (
+            <>
+              <Zap className="w-4 h-4 mr-2" />
+              Create Atomic Swap
+            </>
+          )}
         </Button>
 
         {/* Info */}
