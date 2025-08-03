@@ -51,8 +51,14 @@ export class AtomicSwapEngine {
     const timelock = Math.floor(Date.now() / 1000) + timelockDuration;
     const amountWei = ethers.parseEther(amount);
 
+    // For cross-chain swaps, use a placeholder Ethereum address since the actual recipient is on Cosmos
+    // The real recipient verification happens through the hashlock mechanism
+    const ethRecipient = recipientAddress.startsWith('cosmos') 
+      ? await this.signer.getAddress() // Use sender's address as placeholder for cross-chain
+      : recipientAddress;
+
     const tx = await contract.createHTLC(
-      recipientAddress,
+      ethRecipient,
       hashlock,
       timelock,
       { value: amountWei }
