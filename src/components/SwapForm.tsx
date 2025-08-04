@@ -206,62 +206,51 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
         onCreateSwap(swapData);
         
       } else {
-        // PRODUCTION/TESTNET MODE: Real blockchain interactions
-        const { atomicSwapEngine } = await import("./AtomicSwapEngine");
-        await atomicSwapEngine.initialize();
+        // PRODUCTION/TESTNET MODE: Real blockchain interactions via Supabase Edge Function
+        console.log("🚀 Creating REAL blockchain swap via Supabase...");
         
-        const secret = atomicSwapEngine.generateSecret();
-        const hashlock = atomicSwapEngine.generateHashlock(secret);
+        const { supabase } = await import("@/integrations/supabase/client");
         
-        if (getTokenChain(fromToken) === "Ethereum") {
-          console.log("🚀 Creating REAL Ethereum HTLC on Sepolia...");
-          const tx = await atomicSwapEngine.createEthereumSwap(
-            finalRecipientAddress,
+        const { data, error } = await supabase.functions.invoke('real-atomic-swap', {
+          body: {
+            action: 'create',
+            direction: swapData.direction,
+            fromToken,
+            toToken,
             amount,
-            hashlock,
-            parseInt(timelockDuration)
-          );
-          
-          console.log("✅ Ethereum transaction sent:", tx.hash);
-          alert(`✅ Ethereum HTLC created successfully!
-Transaction: ${tx.hash}
-Explorer: ${tx.explorerUrl}
-Click to view on Etherscan`);
-          
-          swapData.ethereumTxHash = tx.hash;
-          swapData.ethereumExplorerUrl = tx.explorerUrl;
-          swapData.hashlock = hashlock;
-          swapData.secret = secret;
-          swapData.status = "eth-locked";
-          
-          // Store secret securely for claiming
-          sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
-          sessionStorage.setItem(`swap_hashlock_${tx.hash}`, hashlock);
-          
-        } else if (getTokenChain(fromToken) === "Cosmos") {
-          console.log("🌌 Creating Cosmos swap...");
-          const tx = await atomicSwapEngine.createCosmosSwap(
-            finalRecipientAddress,
-            amount,
-            hashlock,
-            parseInt(timelockDuration)
-          );
-          
-          console.log("✅ Cosmos transaction sent:", tx.hash);
-          alert(`✅ Cosmos swap created successfully!
-Transaction: ${tx.hash}
-Explorer: ${tx.explorerUrl}
-Click to view on Mintscan`);
-          
-          swapData.cosmosTxHash = tx.hash;
-          swapData.cosmosExplorerUrl = tx.explorerUrl;
-          swapData.hashlock = hashlock;
-          swapData.secret = secret;
-          swapData.status = "cosmos-locked";
-          
-          // Store secret securely for claiming
-          sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
-          sessionStorage.setItem(`swap_hashlock_${tx.hash}`, hashlock);
+            senderAddress: finalRecipientAddress, // For demo
+            recipientAddress: finalRecipientAddress,
+            timelock: parseInt(timelockDuration)
+          }
+        });
+
+        if (error) {
+          throw new Error(`Supabase function error: ${error.message}`);
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to create swap');
+        }
+
+        console.log("✅ REAL blockchain swap created:", data);
+        alert(`🚀 REAL Blockchain Swap Created!
+Swap ID: ${data.swap.id}
+Ethereum TX: ${data.swap.ethereum_tx_hash?.slice(0, 10)}...
+Status: ${data.swap.status}
+🔗 View on Explorer`);
+
+        // Update swap data with real blockchain results
+        swapData.id = data.swap.id;
+        swapData.ethereumTxHash = data.swap.ethereum_tx_hash;
+        swapData.ethereumExplorerUrl = data.swap.ethereum_explorer_url;
+        swapData.hashlock = data.swap.hashlock;
+        swapData.secret = data.swap.secret;
+        swapData.status = data.swap.status;
+        swapData.isRealBlockchain = data.swap.is_real_blockchain;
+        
+        // Store for later use
+        if (data.swap.secret) {
+          sessionStorage.setItem(`swap_secret_${data.swap.id}`, data.swap.secret);
         }
 
         onCreateSwap(swapData);
