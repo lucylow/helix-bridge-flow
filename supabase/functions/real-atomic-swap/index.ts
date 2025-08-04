@@ -22,13 +22,19 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 Edge function invoked with method:', req.method)
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
     if (req.method === 'POST') {
-      const { action, ...data }: { action: string } & any = await req.json()
+      console.log('📝 Processing POST request...')
+      const requestBody = await req.json()
+      console.log('📋 Request body:', JSON.stringify(requestBody, null, 2))
+      
+      const { action, ...data }: { action: string } & any = requestBody
 
       if (action === 'create') {
         console.log('🚀 Creating REAL blockchain swap...')
@@ -216,10 +222,17 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('❌ Edge function error:', error)
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
+    
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      details: 'Check edge function logs for more information'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
