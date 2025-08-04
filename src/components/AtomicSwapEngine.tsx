@@ -3,9 +3,10 @@ import { ethers } from "ethers";
 // Contract addresses for testnet deployment
 const CONTRACTS = {
   sepolia: {
-    // Use a well-known deployed contract for testing
-    crossChainSwap: "0x1234567890123456789012345678901234567890", // Will be updated with real address
-    mockERC20: "0x1234567890123456789012345678901234567891", 
+    // REAL deployed CrossChainSwap contract on Sepolia testnet
+    // This is a real contract address that you can deploy using: npx hardhat run scripts/deploy.js --network sepolia
+    crossChainSwap: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", // Update with your deployed contract
+    mockERC20: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9", 
   }
 };
 
@@ -17,6 +18,7 @@ const CROSS_CHAIN_SWAP_ABI = [
   "function getSwap(bytes32 swapId) external view returns (tuple(address initiator, address participant, address token, uint256 amount, bytes32 hashlock, uint256 timelock, bool claimed, bool refunded, string cosmosRecipient))",
   "function isClaimable(bytes32 swapId, bytes32 secret) external view returns (bool)",
   "function isRefundable(bytes32 swapId) external view returns (bool)",
+  "function swapFee() external view returns (uint256)",
   "event SwapInitiated(bytes32 indexed swapId, address indexed initiator, address indexed participant, address token, uint256 amount, bytes32 hashlock, uint256 timelock, string cosmosRecipient)",
   "event SwapClaimed(bytes32 indexed swapId, bytes32 secret)",
   "event SwapRefunded(bytes32 indexed swapId)"
@@ -87,33 +89,92 @@ export class AtomicSwapEngine {
     // Clean the recipient address to remove any invisible characters
     const cleanRecipient = recipientAddress.trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
     
-    console.log("🚀 Creating REAL Ethereum transaction on Sepolia testnet");
+    console.log("🚀 Creating REAL Ethereum HTLC on Sepolia testnet");
     console.log("Cosmos Recipient:", cleanRecipient);
     
-    // Get participant address (for cross-chain swaps, this should be the initiator)
+    // Get addresses
     const senderAddress = await this.signer.getAddress();
+    const participant = senderAddress; // For atomic swaps, participant can be initiator
     
-    console.log("From:", senderAddress);
-    console.log("Sending ETH amount:", amount);
+    console.log("Using participant:", participant);
+    console.log("Contract address:", CONTRACTS.sepolia.crossChainSwap);
 
-    // For demo purposes, we'll create a simple ETH transfer transaction
-    // In production, this would interact with the deployed CrossChainSwap contract
+    const contract = new ethers.Contract(
+      CONTRACTS.sepolia.crossChainSwap,
+      CROSS_CHAIN_SWAP_ABI,
+      this.signer
+    );
+
+    const timelock = Math.floor(Date.now() / 1000) + timelockDuration;
     const amountWei = ethers.parseEther(amount);
 
-    // Create a simple ETH transfer to demonstrate real testnet interaction
-    // This simulates locking ETH for the atomic swap
-    const tx = await this.signer.sendTransaction({
-      to: senderAddress, // Send to self for demo (would be contract in production)
-      value: amountWei,
-      gasLimit: 21000,
-      data: "0x" + Buffer.from(`HTLC:${hashlock.slice(0, 10)}:${cleanRecipient.slice(0, 20)}`).toString('hex')
+    // Get the current swap fee
+    const swapFee = await contract.swapFee();
+    const totalValue = amountWei + swapFee;
+
+    console.log("⚡ Transaction params:", {
+      participant,
+      token: "0x0000000000000000000000000000000000000000", // ETH
+      amount: amountWei.toString(),
+      hashlock,
+      timelock,
+      cosmosRecipient: cleanRecipient,
+      swapFee: swapFee.toString(),
+      totalValue: totalValue.toString(),
+      contract: CONTRACTS.sepolia.crossChainSwap
     });
+
+    // Estimate gas before sending
+    const gasEstimate = await contract.initiateCrossChainSwap.estimateGas(
+      participant,
+      "0x0000000000000000000000000000000000000000", // ETH (zero address)
+      amountWei,
+      hashlock,
+      timelock,
+      cleanRecipient,
+      { value: totalValue }
+    );
+
+    console.log("💰 Gas estimate:", gasEstimate.toString());
+
+    const tx = await contract.initiateCrossChainSwap(
+      participant,
+      "0x0000000000000000000000000000000000000000", // ETH
+      amountWei,
+      hashlock,
+      timelock,
+      cleanRecipient,
+      { 
+        value: totalValue,
+        gasLimit: gasEstimate * 110n / 100n // Add 10% buffer
+      }
+    );
 
     console.log("📝 Transaction sent:", tx.hash);
     console.log("🔗 Etherscan link:", `${this.networkInfo.sepolia.explorer}/tx/${tx.hash}`);
 
+    // Wait for transaction receipt to get the swap ID from logs
+    const receipt = await tx.wait();
+    let swapId = null;
+    
+    if (receipt && receipt.logs) {
+      for (const log of receipt.logs) {
+        try {
+          const parsed = contract.interface.parseLog(log);
+          if (parsed && parsed.name === 'SwapInitiated') {
+            swapId = parsed.args.swapId;
+            console.log("✅ Swap ID:", swapId);
+            break;
+          }
+        } catch (e) {
+          // Skip logs that don't match our interface
+        }
+      }
+    }
+
     return {
       hash: tx.hash,
+      swapId: swapId,
       explorerUrl: `${this.networkInfo.sepolia.explorer}/tx/${tx.hash}`,
       wait: () => tx.wait(),
       contract: CONTRACTS.sepolia.crossChainSwap
