@@ -232,14 +232,12 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
           throw new Error(data.error || 'Failed to create swap');
         }
 
-        console.log("✅ REAL blockchain swap created:", data);
-        alert(`🎉 Blockchain Swap Created!
+        console.log("✅ Blockchain swap created:", data);
+        alert(`🎉 Swap Created Successfully!
 Swap ID: ${data.swap.id}
 Ethereum TX: ${data.swap.ethereum_tx_hash?.slice(0, 10)}...
 Status: ${data.swap.status}
-🔗 View on Etherscan: ${data.swap.ethereum_explorer_url}
-
-⚡ This is a REAL blockchain transaction on Sepolia testnet!`);
+🔗 View on Etherscan: ${data.swap.ethereum_explorer_url}`);
 
         // Update swap data with real blockchain results
         swapData.id = data.swap.id;
