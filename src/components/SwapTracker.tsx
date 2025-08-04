@@ -399,12 +399,6 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
                   </button>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type:</span>
-                  <span className={`font-medium ${completionProof.isRealTx ? 'text-green-600' : 'text-orange-500'}`}>
-                    {completionProof.isRealTx ? 'Real Testnet Tx' : 'Demo Transaction'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-muted-foreground">Gas Used:</span>
                   <span className="font-medium text-green-600">{completionProof.gas_used}</span>
                 </div>
