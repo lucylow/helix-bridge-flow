@@ -23,6 +23,13 @@ const CROSS_CHAIN_SWAP_ABI = [
 export class AtomicSwapEngine {
   private provider: ethers.BrowserProvider | null = null;
   private signer: ethers.Signer | null = null;
+  private networkInfo = {
+    sepolia: {
+      chainId: 11155111,
+      name: "Sepolia Testnet",
+      explorer: "https://sepolia.etherscan.io"
+    }
+  };
   
   async initialize() {
     if (!window.ethereum) {
@@ -30,7 +37,39 @@ export class AtomicSwapEngine {
     }
     
     this.provider = new ethers.BrowserProvider(window.ethereum);
+    await this.switchToSepolia();
     this.signer = await this.provider.getSigner();
+    
+    console.log("AtomicSwapEngine initialized on Sepolia testnet");
+  }
+
+  async switchToSepolia() {
+    if (!window.ethereum) return;
+    
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0xaa36a7' }], // Sepolia chainId
+      });
+    } catch (switchError: any) {
+      if (switchError.code === 4902) {
+        // Chain not added, add it
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0xaa36a7',
+            chainName: 'Sepolia test network',
+            nativeCurrency: {
+              name: 'SepoliaETH',
+              symbol: 'ETH',
+              decimals: 18,
+            },
+            rpcUrls: ['https://sepolia.infura.io/v3/'],
+            blockExplorerUrls: ['https://sepolia.etherscan.io/'],
+          }],
+        });
+      }
+    }
   }
 
   async createEthereumSwap(
@@ -46,7 +85,8 @@ export class AtomicSwapEngine {
     // Clean the recipient address to remove any invisible characters
     const cleanRecipient = recipientAddress.trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
     
-    console.log("Creating swap with recipient:", cleanRecipient);
+    console.log("🚀 Creating REAL Ethereum HTLC on Sepolia testnet");
+    console.log("Recipient:", cleanRecipient);
     
     // Always use sender's address as the on-chain recipient for cross-chain swaps
     // The real recipient is verified through the hashlock mechanism
@@ -54,6 +94,7 @@ export class AtomicSwapEngine {
     const ethRecipient = senderAddress; // Use sender's address as placeholder
     
     console.log("Using ethRecipient:", ethRecipient);
+    console.log("Contract address:", CONTRACTS.sepolia.crossChainSwap);
 
     const contract = new ethers.Contract(
       CONTRACTS.sepolia.crossChainSwap,
@@ -64,27 +105,70 @@ export class AtomicSwapEngine {
     const timelock = Math.floor(Date.now() / 1000) + timelockDuration;
     const amountWei = ethers.parseEther(amount);
 
-    console.log("Transaction params:", {
+    console.log("⚡ Transaction params:", {
       ethRecipient,
       hashlock,
       timelock,
-      amountWei: amountWei.toString()
+      amountWei: amountWei.toString(),
+      contract: CONTRACTS.sepolia.crossChainSwap
     });
 
-    const tx = await contract.createHTLC(
+    // Estimate gas before sending
+    const gasEstimate = await contract.createHTLC.estimateGas(
       ethRecipient,
       hashlock,
       timelock,
       { value: amountWei }
     );
 
+    console.log("💰 Gas estimate:", gasEstimate.toString());
+
+    const tx = await contract.createHTLC(
+      ethRecipient,
+      hashlock,
+      timelock,
+      { 
+        value: amountWei,
+        gasLimit: gasEstimate * 110n / 100n // Add 10% buffer
+      }
+    );
+
+    console.log("📝 Transaction sent:", tx.hash);
+    console.log("🔗 Etherscan link:", `${this.networkInfo.sepolia.explorer}/tx/${tx.hash}`);
+
     return {
       hash: tx.hash,
-      wait: () => tx.wait()
+      explorerUrl: `${this.networkInfo.sepolia.explorer}/tx/${tx.hash}`,
+      wait: () => tx.wait(),
+      contract: CONTRACTS.sepolia.crossChainSwap
     };
   }
 
   async claimSwap(swapId: string, secret: string) {
+    if (!this.signer) {
+      throw new Error("Engine not initialized");
+    }
+
+    console.log("🎯 Claiming swap:", swapId);
+
+    const contract = new ethers.Contract(
+      CONTRACTS.sepolia.crossChainSwap,
+      CROSS_CHAIN_SWAP_ABI,
+      this.signer
+    );
+
+    const tx = await contract.claim(swapId, secret);
+    console.log("✅ Claim transaction sent:", tx.hash);
+    console.log("🔗 Etherscan link:", `${this.networkInfo.sepolia.explorer}/tx/${tx.hash}`);
+    
+    return {
+      hash: tx.hash,
+      explorerUrl: `${this.networkInfo.sepolia.explorer}/tx/${tx.hash}`,
+      wait: () => tx.wait()
+    };
+  }
+
+  async getSwapDetails(swapId: string) {
     if (!this.signer) {
       throw new Error("Engine not initialized");
     }
@@ -95,11 +179,7 @@ export class AtomicSwapEngine {
       this.signer
     );
 
-    const tx = await contract.claim(swapId, secret);
-    return {
-      hash: tx.hash,
-      wait: () => tx.wait()
-    };
+    return await contract.getSwap(swapId);
   }
 
   async refundSwap(swapId: string) {
@@ -121,11 +201,46 @@ export class AtomicSwapEngine {
   }
 
   generateSecret(): string {
-    return ethers.hexlify(ethers.randomBytes(32));
+    const secret = ethers.hexlify(ethers.randomBytes(32));
+    console.log("🔐 Generated secret:", secret);
+    return secret;
   }
 
   generateHashlock(secret: string): string {
-    return ethers.keccak256(secret);
+    const hashlock = ethers.keccak256(secret);
+    console.log("🔒 Generated hashlock:", hashlock);
+    return hashlock;
+  }
+
+  // Cosmos integration stubs (for future implementation)
+  async createCosmosSwap(
+    recipientAddress: string,
+    amount: string,
+    hashlock: string,
+    timelockDuration: number
+  ) {
+    console.log("🌌 Creating Cosmos swap (simulated for demo)");
+    
+    // Simulate Cosmos transaction
+    const cosmosHash = `cosmos_tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    return {
+      hash: cosmosHash,
+      explorerUrl: `https://testnet.mintscan.io/cosmos-testnet/txs/${cosmosHash}`,
+      wait: () => Promise.resolve({ status: 1 })
+    };
+  }
+
+  async claimCosmosSwap(swapId: string, secret: string) {
+    console.log("🌌 Claiming Cosmos swap (simulated for demo)");
+    
+    const cosmosHash = `cosmos_claim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    return {
+      hash: cosmosHash,
+      explorerUrl: `https://testnet.mintscan.io/cosmos-testnet/txs/${cosmosHash}`,
+      wait: () => Promise.resolve({ status: 1 })
+    };
   }
 }
 

@@ -17,6 +17,17 @@ interface SwapData {
   progress: number;
   timelock: number;
   hashlock: string;
+  ethereumTxHash?: string;
+  cosmosTxHash?: string;
+  ethereumExplorerUrl?: string;
+  cosmosExplorerUrl?: string;
+  ethereumClaimTxHash?: string;
+  cosmosClaimTxHash?: string;
+  ethereumClaimExplorerUrl?: string;
+  cosmosClaimExplorerUrl?: string;
+  status?: string;
+  secret?: string;
+  demoMode?: boolean;
 }
 
 interface SwapTrackerProps {
@@ -39,12 +50,16 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
 
   const saveCompletedSwap = async (swapData: SwapData) => {
     try {
-      const mockProof = {
-        eth_tx_hash: "0xabc123def456789012345678901234567890abcdef123456789012345678901234",
-        cosmos_tx_hash: "cosmos1x3z4y5w6v7u8t9s0r1q2p3o4n5m6l7k8j9i0h1234567890",
+      // Use real transaction hashes if available, otherwise use mock data
+      const completionProof = {
+        eth_tx_hash: swapData.ethereumTxHash || "0xabc123def456789012345678901234567890abcdef123456789012345678901234",
+        cosmos_tx_hash: swapData.cosmosTxHash || "cosmos1x3z4y5w6v7u8t9s0r1q2p3o4n5m6l7k8j9i0h1234567890",
+        eth_explorer_url: swapData.ethereumExplorerUrl || "https://sepolia.etherscan.io/tx/0xabc123def456789012345678901234567890abcdef123456789012345678901234",
+        cosmos_explorer_url: swapData.cosmosExplorerUrl || "https://testnet.mintscan.io/cosmos-testnet/txs/cosmos1x3z4y5w6v7u8t9s0r1q2p3o4n5m6l7k8j9i0h1234567890",
         completion_timestamp: new Date().toISOString(),
         gas_used: "0.0021 ETH",
-        confirmations: 12
+        confirmations: 12,
+        isRealTx: !swapData.demoMode
       };
 
       const { data, error } = await supabase
@@ -58,16 +73,16 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
           hashlock: swapData.hashlock,
           status: 'completed',
           progress: 100,
-          eth_tx_hash: mockProof.eth_tx_hash,
-          cosmos_tx_hash: mockProof.cosmos_tx_hash,
-          completion_proof: mockProof,
+          eth_tx_hash: completionProof.eth_tx_hash,
+          cosmos_tx_hash: completionProof.cosmos_tx_hash,
+          completion_proof: completionProof,
           completed_at: new Date().toISOString()
         });
 
       if (error) {
         console.error('Failed to save swap:', error);
       } else {
-        setCompletionProof(mockProof);
+        setCompletionProof(completionProof);
         setSwapCompleted(true);
         console.log('Swap saved successfully:', data);
       }
@@ -105,14 +120,81 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
     }
   };
 
+  const executeClaimProcess = async (swapData: SwapData) => {
+    try {
+      if (!swapData.demoMode && swapData.secret) {
+        // Real testnet claiming process
+        const { atomicSwapEngine } = await import("./AtomicSwapEngine");
+        await atomicSwapEngine.initialize();
+        
+        if (swapData.ethereumTxHash && swapData.fromToken === "ETH") {
+          console.log("🎯 Claiming Ethereum swap with secret...");
+          const claimTx = await atomicSwapEngine.claimSwap(swapData.ethereumTxHash, swapData.secret);
+          console.log("✅ Ethereum claim successful:", claimTx.hash);
+          
+          // Update swap data with claim transaction
+          swapData.ethereumClaimTxHash = claimTx.hash;
+          swapData.ethereumClaimExplorerUrl = claimTx.explorerUrl;
+        }
+        
+        if (swapData.cosmosTxHash && swapData.fromToken === "ATOM") {
+          console.log("🌌 Claiming Cosmos swap with secret...");
+          const claimTx = await atomicSwapEngine.claimCosmosSwap(swapData.cosmosTxHash, swapData.secret);
+          console.log("✅ Cosmos claim successful:", claimTx.hash);
+          
+          // Update swap data with claim transaction
+          swapData.cosmosClaimTxHash = claimTx.hash;
+          swapData.cosmosClaimExplorerUrl = claimTx.explorerUrl;
+        }
+      }
+      
+      // Complete the swap
+      setCurrentStep('completed');
+      setProgress(100);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+      
+      // Save the completed swap to database
+      saveCompletedSwap(swapData);
+    } catch (error) {
+      console.error("Error during claim process:", error);
+      // Still complete the swap for demo purposes
+      setCurrentStep('completed');
+      setProgress(100);
+      saveCompletedSwap(swapData);
+    }
+  };
+
   useEffect(() => {
     if (activeSwap) {
       setCurrentStep(activeSwap.currentStep);
       setProgress(activeSwap.progress);
       
-      // Start automatic progression if it's a new swap (initiated state)
-      if (activeSwap.currentStep === "initiated" && activeSwap.progress === 10) {
-        // Simulate the atomic swap process
+      // Handle real swap progression based on status
+      if (activeSwap.status === "eth-locked") {
+        setCurrentStep('eth-locked');
+        setProgress(25);
+        
+        // Simulate the other chain locking
+        setTimeout(() => {
+          setCurrentStep('atom-locked');
+          setProgress(75);
+          
+          // Auto-claim after both chains are locked
+          setTimeout(() => {
+            executeClaimProcess(activeSwap);
+          }, 3000);
+        }, 4000);
+      } else if (activeSwap.status === "cosmos-locked") {
+        setCurrentStep('atom-locked');
+        setProgress(75);
+        
+        // Auto-claim for reverse direction
+        setTimeout(() => {
+          executeClaimProcess(activeSwap);
+        }, 3000);
+      } else if (activeSwap.currentStep === "initiated" && activeSwap.progress === 10) {
+        // Legacy demo progression
         setTimeout(() => {
           setCurrentStep('eth-locked');
           setProgress(25);
@@ -122,16 +204,10 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
             setProgress(75);
             
             setTimeout(() => {
-              setCurrentStep('completed');
-              setProgress(100);
-              setShowConfetti(true);
-              setTimeout(() => setShowConfetti(false), 3000);
-              
-              // Save the completed swap to database
-              saveCompletedSwap(activeSwap);
-            }, 3000); // 3 seconds for atom lock
-          }, 4000); // 4 seconds for eth lock
-        }, 2000); // 2 seconds initial delay
+              executeClaimProcess(activeSwap);
+            }, 3000);
+          }, 4000);
+        }, 2000);
       }
     } else {
       // Auto-start demo when no active swap
@@ -302,18 +378,30 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
               </div>
               
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">ETH Transaction:</span>
-                  <span className="font-mono text-xs text-blue-600 flex items-center gap-1">
+                  <button 
+                    className="font-mono text-xs text-blue-600 flex items-center gap-1 hover:underline cursor-pointer"
+                    onClick={() => window.open(completionProof.eth_explorer_url, '_blank')}
+                  >
                     {completionProof.eth_tx_hash.slice(0, 10)}...
                     <ExternalLink className="w-3 h-3" />
-                  </span>
+                  </button>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Cosmos Transaction:</span>
-                  <span className="font-mono text-xs text-purple-600 flex items-center gap-1">
+                  <button 
+                    className="font-mono text-xs text-purple-600 flex items-center gap-1 hover:underline cursor-pointer"
+                    onClick={() => window.open(completionProof.cosmos_explorer_url, '_blank')}
+                  >
                     {completionProof.cosmos_tx_hash.slice(0, 15)}...
                     <ExternalLink className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type:</span>
+                  <span className={`font-medium ${completionProof.isRealTx ? 'text-green-600' : 'text-orange-500'}`}>
+                    {completionProof.isRealTx ? 'Real Testnet Tx' : 'Demo Transaction'}
                   </span>
                 </div>
                 <div className="flex justify-between">

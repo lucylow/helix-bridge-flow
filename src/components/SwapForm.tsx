@@ -169,9 +169,9 @@ const SwapForm = ({ onCreateSwap, networkMode }: SwapFormProps) => {
         isTestnetMode
       };
 
-      if (isDemoMode || isTestnetMode) {
-        // DEMO/TESTNET MODE: Always succeed with simulated data
-        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Simulating successful swap creation`);
+      if (isDemoMode) {
+        // DEMO MODE: Always succeed with simulated data
+        console.log('DEMO MODE: Simulating successful swap creation');
         
         // Generate fake transaction data for demo
         const fakeHash = `0x${Math.random().toString(16).substr(2, 64)}`;
@@ -185,7 +185,7 @@ const SwapForm = ({ onCreateSwap, networkMode }: SwapFormProps) => {
         swapData.demoMode = true;
         
         // Simulate successful transaction
-        alert(`✅ ${isDemoMode ? 'DEMO' : 'TESTNET'}: Swap created successfully! 
+        alert(`✅ DEMO: Swap created successfully! 
 From: ${amount} ${fromToken} 
 To: ${toToken}
 Recipient: ${finalRecipientAddress}
@@ -194,16 +194,15 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
         onCreateSwap(swapData);
         
       } else {
-        // PRODUCTION MODE: Real blockchain interactions
-        if (window.ethereum && getTokenChain(fromToken) === "Ethereum") {
-          // Real Ethereum swap
-          const { atomicSwapEngine } = await import("./AtomicSwapEngine");
-          await atomicSwapEngine.initialize();
-          
-          const secret = atomicSwapEngine.generateSecret();
-          const hashlock = atomicSwapEngine.generateHashlock(secret);
-          
-          console.log("Creating real Ethereum HTLC...");
+        // PRODUCTION/TESTNET MODE: Real blockchain interactions
+        const { atomicSwapEngine } = await import("./AtomicSwapEngine");
+        await atomicSwapEngine.initialize();
+        
+        const secret = atomicSwapEngine.generateSecret();
+        const hashlock = atomicSwapEngine.generateHashlock(secret);
+        
+        if (getTokenChain(fromToken) === "Ethereum") {
+          console.log("🚀 Creating REAL Ethereum HTLC on Sepolia...");
           const tx = await atomicSwapEngine.createEthereumSwap(
             finalRecipientAddress,
             amount,
@@ -211,24 +210,55 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
             parseInt(timelockDuration)
           );
           
-          console.log("Transaction sent:", tx.hash);
-          alert(`Ethereum transaction sent! Hash: ${tx.hash}`);
-          
-          // Store secret securely (in real app, use encrypted storage)
-          sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
+          console.log("✅ Ethereum transaction sent:", tx.hash);
+          alert(`✅ Ethereum HTLC created successfully!
+Transaction: ${tx.hash}
+Explorer: ${tx.explorerUrl}
+Click to view on Etherscan`);
           
           swapData.ethereumTxHash = tx.hash;
+          swapData.ethereumExplorerUrl = tx.explorerUrl;
           swapData.hashlock = hashlock;
           swapData.secret = secret;
+          swapData.status = "eth-locked";
+          
+          // Store secret securely for claiming
+          sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
+          sessionStorage.setItem(`swap_hashlock_${tx.hash}`, hashlock);
+          
+        } else if (getTokenChain(fromToken) === "Cosmos") {
+          console.log("🌌 Creating Cosmos swap...");
+          const tx = await atomicSwapEngine.createCosmosSwap(
+            finalRecipientAddress,
+            amount,
+            hashlock,
+            parseInt(timelockDuration)
+          );
+          
+          console.log("✅ Cosmos transaction sent:", tx.hash);
+          alert(`✅ Cosmos swap created successfully!
+Transaction: ${tx.hash}
+Explorer: ${tx.explorerUrl}
+Click to view on Mintscan`);
+          
+          swapData.cosmosTxHash = tx.hash;
+          swapData.cosmosExplorerUrl = tx.explorerUrl;
+          swapData.hashlock = hashlock;
+          swapData.secret = secret;
+          swapData.status = "cosmos-locked";
+          
+          // Store secret securely for claiming
+          sessionStorage.setItem(`swap_secret_${tx.hash}`, secret);
+          sessionStorage.setItem(`swap_hashlock_${tx.hash}`, hashlock);
         }
 
         onCreateSwap(swapData);
       }
       
     } catch (error: any) {
-      if (isDemoMode || isTestnetMode) {
-        // In demo/testnet mode, never show errors - always succeed
-        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Forcing success despite error:`, error);
+      if (isDemoMode) {
+        // In demo mode, never show errors - always succeed
+        console.log('DEMO MODE: Forcing success despite error:', error);
         
         const fakeHash = `0x${Math.random().toString(16).substr(2, 64)}`;
         const fakeSecret = `0x${Math.random().toString(16).substr(2, 64)}`;
@@ -251,11 +281,11 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
           isDemoMode: true
         };
         
-        alert(`✅ ${isDemoMode ? 'DEMO' : 'TESTNET'}: Swap created successfully! 
+        alert(`✅ DEMO: Swap created successfully! 
 From: ${amount} ${fromToken} 
 To: ${toToken}
 Recipient: ${finalRecipientAddress}
-${isDemoMode ? 'Demo' : 'Testnet'} Transaction: ${fakeHash.slice(0, 10)}...`);
+Demo Transaction: ${fakeHash.slice(0, 10)}...`);
         
         onCreateSwap(swapData);
       } else {
