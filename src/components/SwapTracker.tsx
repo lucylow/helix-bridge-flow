@@ -377,25 +377,25 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
                 <span className="font-semibold text-green-800">Swap Completed Successfully</span>
               </div>
               
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
+              <div className="space-y-3 text-sm">
+                <div className="space-y-1">
                   <span className="text-muted-foreground">ETH Transaction:</span>
                   <button 
-                    className="font-mono text-xs text-blue-600 flex items-center gap-1 hover:underline cursor-pointer"
+                    className="font-mono text-xs text-blue-600 flex items-center gap-1 hover:underline cursor-pointer w-full text-left break-all"
                     onClick={() => window.open(completionProof.eth_explorer_url, '_blank')}
                   >
-                    {completionProof.eth_tx_hash.slice(0, 10)}...
-                    <ExternalLink className="w-3 h-3" />
+                    {completionProof.eth_tx_hash}
+                    <ExternalLink className="w-3 h-3 flex-shrink-0 ml-1" />
                   </button>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="space-y-1">
                   <span className="text-muted-foreground">Cosmos Transaction:</span>
                   <button 
-                    className="font-mono text-xs text-purple-600 flex items-center gap-1 hover:underline cursor-pointer"
+                    className="font-mono text-xs text-purple-600 flex items-center gap-1 hover:underline cursor-pointer w-full text-left break-all"
                     onClick={() => window.open(completionProof.cosmos_explorer_url, '_blank')}
                   >
-                    {completionProof.cosmos_tx_hash.slice(0, 15)}...
-                    <ExternalLink className="w-3 h-3" />
+                    {completionProof.cosmos_tx_hash}
+                    <ExternalLink className="w-3 h-3 flex-shrink-0 ml-1" />
                   </button>
                 </div>
                 <div className="flex justify-between">
