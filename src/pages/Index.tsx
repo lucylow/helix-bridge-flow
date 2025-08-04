@@ -11,6 +11,7 @@ import TechnicalDetails from "@/components/TechnicalDetails";
 import JudgingHelper from "@/components/JudgingHelper";
 import ErrorCenter from "@/components/ErrorCenter";
 import { OneInchStatus } from "@/components/OneInchStatus";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("create");
@@ -19,6 +20,40 @@ const Index = () => {
   const [hasError, setHasError] = useState(false);
   const [activeSwap, setActiveSwap] = useState(null);
   const [networkMode, setNetworkMode] = useState<"mainnet" | "testnet" | "demo">("demo");
+  const [statistics, setStatistics] = useState([
+    { label: "Total Swaps", value: "0", color: "text-foreground" },
+    { label: "Created", value: "0", color: "text-blue-500" },
+    { label: "Onchain", value: "0", color: "text-orange-500" },
+    { label: "Completed", value: "0", color: "text-green-500" }
+  ]);
+
+  // Fetch statistics from database
+  const fetchStatistics = async () => {
+    try {
+      const { data: swaps, error } = await supabase
+        .from('atomic_swaps')
+        .select('status');
+
+      if (error) {
+        console.error('Error fetching statistics:', error);
+        return;
+      }
+
+      const totalSwaps = swaps?.length || 0;
+      const created = swaps?.filter(swap => swap.status === 'initiated' || swap.status === 'created').length || 0;
+      const onchain = swaps?.filter(swap => swap.status === 'eth-locked' || swap.status === 'cosmos-locked').length || 0;
+      const completed = swaps?.filter(swap => swap.status === 'completed').length || 0;
+
+      setStatistics([
+        { label: "Total Swaps", value: totalSwaps.toString(), color: "text-foreground" },
+        { label: "Created", value: created.toString(), color: "text-blue-500" },
+        { label: "Onchain", value: onchain.toString(), color: "text-orange-500" },
+        { label: "Completed", value: completed.toString(), color: "text-green-500" }
+      ]);
+    } catch (error) {
+      console.error('Failed to fetch statistics:', error);
+    }
+  };
 
   // Keyboard shortcut for judging helper
   useEffect(() => {
@@ -32,6 +67,30 @@ const Index = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [judgingHelperVisible]);
+
+  // Fetch statistics on component mount and set up real-time updates
+  useEffect(() => {
+    fetchStatistics();
+
+    // Set up real-time subscription for statistics updates
+    const channel = supabase
+      .channel('atomic_swaps_stats')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'atomic_swaps' 
+        }, 
+        () => {
+          fetchStatistics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleWalletConnect = (chain: "ethereum" | "cosmos") => {
     setWalletsConnected(prev => ({ ...prev, [chain]: true }));
@@ -58,12 +117,6 @@ const Index = () => {
     { name: "Atomic Swap Engine", status: "Active" }
   ];
 
-  const statistics = [
-    { label: "Total Swaps", value: "0", color: "text-foreground" },
-    { label: "Created", value: "0", color: "text-blue-500" },
-    { label: "Onchain", value: "0", color: "text-orange-500" },
-    { label: "Completed", value: "0", color: "text-green-500" }
-  ];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
