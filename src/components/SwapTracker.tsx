@@ -396,20 +396,20 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
                 <div className="space-y-1">
                   <span className="text-muted-foreground">ETH Transaction:</span>
                   <button 
-                    className="font-mono text-xs text-blue-600 flex items-center gap-1 hover:underline cursor-pointer w-full text-left break-all"
+                    className="font-mono text-xs text-blue-600 flex items-center gap-1 hover:underline cursor-pointer w-full text-left"
                     onClick={() => window.open(completionProof.eth_explorer_url, '_blank')}
                   >
-                    {completionProof.eth_tx_hash}
+                    {completionProof.eth_tx_hash.slice(0, 10)}...
                     <ExternalLink className="w-3 h-3 flex-shrink-0 ml-1" />
                   </button>
                 </div>
                 <div className="space-y-1">
                   <span className="text-muted-foreground">Cosmos Transaction:</span>
                   <button 
-                    className="font-mono text-xs text-purple-600 flex items-center gap-1 hover:underline cursor-pointer w-full text-left break-all"
+                    className="font-mono text-xs text-purple-600 flex items-center gap-1 hover:underline cursor-pointer w-full text-left"
                     onClick={() => window.open(completionProof.cosmos_explorer_url, '_blank')}
                   >
-                    {completionProof.cosmos_tx_hash}
+                    {completionProof.cosmos_tx_hash.slice(0, 16)}...
                     <ExternalLink className="w-3 h-3 flex-shrink-0 ml-1" />
                   </button>
                 </div>
