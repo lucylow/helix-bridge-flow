@@ -59,19 +59,28 @@ const SwapForm = ({ onCreateSwap, networkMode }: SwapFormProps) => {
 
   // Auto-fill hardcoded addresses for demo/testnet modes
   useEffect(() => {
-    if (isDemoMode || isTestnetMode) {
+    if (isDemoMode) {
       if (getTokenChain(toToken) === "Ethereum") {
         setRecipientAddress("0x758282EFA1887244c7dBe5b7d585887CF345e8a4");
       } else if (getTokenChain(toToken) === "Cosmos") {
         setRecipientAddress("cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m");
       }
+    } else if (isTestnetMode) {
+      // For testnet, keep existing addresses or allow user input
+      if (!recipientAddress) {
+        if (getTokenChain(toToken) === "Ethereum") {
+          setRecipientAddress("0x758282EFA1887244c7dBe5b7d585887CF345e8a4");
+        } else if (getTokenChain(toToken) === "Cosmos") {
+          setRecipientAddress("cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m");
+        }
+      }
     }
-  }, [toToken, isDemoMode, isTestnetMode]);
+  }, [toToken, isDemoMode, isTestnetMode, recipientAddress]);
 
-  // Validate recipient address in real-time (skip validation in demo/testnet mode)
+  // Validate recipient address in real-time (skip validation in demo mode, allow for testnet)
   useEffect(() => {
-    if (isDemoMode || isTestnetMode) {
-      // In demo/testnet mode, always show as valid
+    if (isDemoMode) {
+      // In demo mode, always show as valid
       setAddressValidation({
         isValid: true,
         error: null,
@@ -129,18 +138,21 @@ const SwapForm = ({ onCreateSwap, networkMode }: SwapFormProps) => {
       return;
     }
 
-    // Use hardcoded working addresses for demo/testnet modes
+    // Use hardcoded working addresses for demo mode only
     let finalRecipientAddress = recipientAddress;
     
-    if (isDemoMode || isTestnetMode) {
+    if (isDemoMode) {
       // Force hardcoded demo addresses that we know work
       if (getTokenChain(toToken) === "Ethereum") {
         finalRecipientAddress = "0x758282EFA1887244c7dBe5b7d585887CF345e8a4";
-        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Using hardcoded Ethereum address:`, finalRecipientAddress);
+        console.log('DEMO MODE: Using hardcoded Ethereum address:', finalRecipientAddress);
       } else if (getTokenChain(toToken) === "Cosmos") {
         finalRecipientAddress = "cosmos1vvegpsamqk9nzk3t5tufs7vjnleq0tmewnxg9m";
-        console.log(`${isDemoMode ? 'DEMO' : 'TESTNET'} MODE: Using hardcoded Cosmos address:`, finalRecipientAddress);
+        console.log('DEMO MODE: Using hardcoded Cosmos address:', finalRecipientAddress);
       }
+    } else if (isTestnetMode) {
+      // For testnet mode, use user input or default addresses
+      console.log('TESTNET MODE: Using user provided or default address:', finalRecipientAddress);
     } else {
       // Production mode: Use validation
       if (!addressValidation.isValid) {
@@ -148,7 +160,7 @@ const SwapForm = ({ onCreateSwap, networkMode }: SwapFormProps) => {
         return;
       }
 
-      // For production mode, just use the validated address
+      // For production mode, use the validated address
       finalRecipientAddress = addressValidation.normalized!;
     }
 
@@ -472,7 +484,7 @@ Demo Transaction: ${fakeHash.slice(0, 10)}...`);
         <Button 
           onClick={handleCreateSwap} 
           className="w-full"
-          disabled={!amount || (networkMode === "mainnet" && !addressValidation.isValid) || isCreating}
+          disabled={!amount || (!isDemoMode && !isTestnetMode && !addressValidation.isValid) || isCreating}
         >
           {isCreating ? (
             <>
