@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Clock, Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { atomicSwapEngine } from "./AtomicSwapEngine";
 
 type SwapStep = "initiated" | "eth-locked" | "atom-locked" | "completed";
 
@@ -124,7 +125,6 @@ const SwapTracker = ({ activeSwap }: SwapTrackerProps) => {
     try {
       if (!swapData.demoMode && swapData.secret) {
         // Real testnet claiming process
-        const { atomicSwapEngine } = await import("./AtomicSwapEngine");
         await atomicSwapEngine.initialize();
         
         if (swapData.ethereumTxHash && swapData.fromToken === "ETH") {
