@@ -233,11 +233,13 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
         }
 
         console.log("✅ REAL blockchain swap created:", data);
-        alert(`🚀 Blockchain Swap Created!
+        alert(`🎉 Blockchain Swap Created!
 Swap ID: ${data.swap.id}
 Ethereum TX: ${data.swap.ethereum_tx_hash?.slice(0, 10)}...
 Status: ${data.swap.status}
-🔗 View on Explorer`);
+🔗 View on Etherscan: ${data.swap.ethereum_explorer_url}
+
+⚡ This is a REAL blockchain transaction on Sepolia testnet!`);
 
         // Update swap data with real blockchain results
         swapData.id = data.swap.id;
