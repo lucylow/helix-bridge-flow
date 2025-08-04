@@ -17,7 +17,11 @@ interface SwapRequest {
 }
 
 serve(async (req) => {
+  console.log('🚀 Function called with method:', req.method)
+  console.log('🚀 Function URL:', req.url)
+  
   if (req.method === 'OPTIONS') {
+    console.log('✅ Handling CORS preflight')
     return new Response(null, { headers: corsHeaders })
   }
 
@@ -31,8 +35,22 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       console.log('📝 Processing POST request...')
-      const requestBody = await req.json()
-      console.log('📋 Request body:', JSON.stringify(requestBody, null, 2))
+      
+      let requestBody;
+      try {
+        requestBody = await req.json()
+        console.log('📋 Request body parsed:', JSON.stringify(requestBody, null, 2))
+      } catch (parseError) {
+        console.error('❌ Failed to parse JSON:', parseError)
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Invalid JSON in request body',
+          details: parseError.message 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
       
       const { action, ...data }: { action: string } & any = requestBody
 
@@ -216,7 +234,13 @@ serve(async (req) => {
       })
     }
 
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+    
+    console.log('❌ Method not allowed:', req.method)
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: 'Method not allowed',
+      allowed_methods: ['GET', 'POST', 'OPTIONS']
+    }), {
       status: 405,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
