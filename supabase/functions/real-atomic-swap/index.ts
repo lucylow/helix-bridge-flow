@@ -229,9 +229,22 @@ serve(async (req) => {
 
 async function createEthereumHTLC(swapData: SwapRequest, hashlock: string) {
   try {
-    const infuraUrl = `https://sepolia.infura.io/v3/${Deno.env.get('INFURA_PROJECT_ID')}`
+    const infuraProjectId = Deno.env.get('INFURA_PROJECT_ID')
     const privateKey = Deno.env.get('ETHEREUM_PRIVATE_KEY')
     const contractAddress = Deno.env.get('ETHEREUM_HTLC_CONTRACT_ADDRESS')
+
+    // Validate required environment variables
+    if (!infuraProjectId) {
+      throw new Error('INFURA_PROJECT_ID not configured')
+    }
+    if (!privateKey) {
+      throw new Error('ETHEREUM_PRIVATE_KEY not configured')
+    }
+    if (!contractAddress) {
+      throw new Error('ETHEREUM_HTLC_CONTRACT_ADDRESS not configured')
+    }
+
+    const infuraUrl = `https://sepolia.infura.io/v3/${infuraProjectId}`
 
     console.log('Creating Ethereum HTLC with:', {
       recipient: swapData.recipientAddress,
@@ -301,7 +314,11 @@ async function claimEthereumHTLC(txHash: string, secret: string) {
 
 async function checkEthereumTxStatus(txHash: string) {
   try {
-    const infuraUrl = `https://sepolia.infura.io/v3/${Deno.env.get('INFURA_PROJECT_ID')}`
+    const infuraProjectId = Deno.env.get('INFURA_PROJECT_ID')
+    if (!infuraProjectId) {
+      throw new Error('INFURA_PROJECT_ID not configured')
+    }
+    const infuraUrl = `https://sepolia.infura.io/v3/${infuraProjectId}`
     
     const response = await fetch(infuraUrl, {
       method: 'POST',

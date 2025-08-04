@@ -233,7 +233,7 @@ Transaction Hash: ${fakeHash.slice(0, 10)}...`);
         }
 
         console.log("✅ REAL blockchain swap created:", data);
-        alert(`🚀 REAL Blockchain Swap Created!
+        alert(`🚀 Blockchain Swap Created!
 Swap ID: ${data.swap.id}
 Ethereum TX: ${data.swap.ethereum_tx_hash?.slice(0, 10)}...
 Status: ${data.swap.status}
